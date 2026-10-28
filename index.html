@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Word Search Explorer — A premium word puzzle game with English, Hindi, and Master modes">
+  <meta name="theme-color" content="#0a1628">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Word Search Explorer</title>
+
+  <!-- Dexie.js — IndexedDB wrapper (mobile database) -->
+  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ════════════════════════════════════════════════════════
+       SCREEN 1: MODE SELECTION
+       ════════════════════════════════════════════════════════ -->
+  <div id="mode-selection" class="screen mode-selection">
+
+    <!-- Nature leaf decorations -->
+    <div class="leaf-decoration top-left"></div>
+    <div class="leaf-decoration top-right"></div>
+    <div class="leaf-decoration bottom-left"></div>
+    <div class="leaf-decoration bottom-right"></div>
+
+    <!-- Header -->
+    <div class="mode-header">
+      <div class="mode-top-bar">
+        <button class="settings-btn" id="btn-settings" aria-label="Settings">⚙️</button>
+        <div class="header-actions">
+          <button class="theme-toggle-btn" id="btn-theme-mode" aria-label="Toggle Theme">☀️</button>
+          <div class="coin-display">
+            <span class="coin-icon">🪙</span>
+            <span class="coin-count">120</span>
+            <span class="coin-add" id="btn-add-coins-mode" title="Get More Coins">+</span>
+          </div>
+        </div>
+      </div>
+      <h1 class="app-title">Word<br>Search</h1>
+      <span class="app-subtitle">Choose Your Mode</span>
+    </div>
+
+    <!-- Mode Cards -->
+    <div class="mode-cards">
+
+      <!-- English Mode -->
+      <div class="mode-card english" data-mode="english" id="mode-english">
+        <div class="mode-icon-circle">Aa</div>
+        <div class="mode-info">
+          <div class="mode-name">English</div>
+          <div class="mode-desc">Find English Words</div>
+        </div>
+        <span class="mode-arrow">›</span>
+      </div>
+
+      <!-- Hindi Mode -->
+      <div class="mode-card hindi" data-mode="hindi" id="mode-hindi">
+        <div class="mode-icon-circle">अ</div>
+        <div class="mode-info">
+          <div class="mode-name">Hindi</div>
+          <div class="mode-desc">Find Hindi Words</div>
+        </div>
+        <span class="mode-arrow">›</span>
+      </div>
+
+      <!-- Master Mode -->
+      <div class="mode-card master" data-mode="master" id="mode-master">
+        <div class="mode-icon-circle">👑</div>
+        <div class="mode-info">
+          <div class="mode-name">Master 🔥</div>
+          <div class="mode-desc">Find Meaning of Hindi Words</div>
+        </div>
+        <span class="mode-arrow">›</span>
+      </div>
+
+      <!-- Settings -->
+      <div class="settings-card" id="btn-settings-card" onclick="App.showScreen('settings-screen'); App.renderSettings();">
+        <div class="mode-icon-circle">⚙️</div>
+        <div class="mode-info">
+          <div class="mode-name">Settings</div>
+          <div class="mode-desc">Sound, Theme & more</div>
+        </div>
+        <span class="mode-arrow" style="color: var(--text-muted)">›</span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════
+       SCREEN 2: LEVEL SELECTION
+       ════════════════════════════════════════════════════════ -->
+  <div id="level-selection" class="screen">
+
+    <!-- Header -->
+    <div class="screen-header">
+      <button class="back-btn" data-target="mode-selection" aria-label="Back">←</button>
+      <span class="title" id="level-mode-title">Master Levels</span>
+      <div class="header-actions">
+        <button class="theme-toggle-btn" id="btn-theme-level" aria-label="Toggle Theme">☀️</button>
+        <div class="coin-display">
+          <span class="coin-icon">🪙</span>
+          <span class="coin-count">120</span>
+          <span class="coin-add" id="btn-add-coins-level" title="Get More Coins">+</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Levels Grid -->
+    <div class="levels-grid" id="levels-container">
+      <!-- Populated dynamically -->
+    </div>
+
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════
+       SCREEN 3: GAME SCREEN
+       ════════════════════════════════════════════════════════ -->
+  <div id="game-screen" class="screen">
+
+    <!-- Header -->
+    <div class="screen-header">
+      <button class="back-btn" data-target="level-selection" aria-label="Back">←</button>
+      <span class="title" id="game-mode-title">Master - Level 1 👑</span>
+      <div class="header-actions">
+        <button class="theme-toggle-btn" id="btn-theme-game" aria-label="Toggle Theme">☀️</button>
+        <div class="coin-display">
+          <span class="coin-icon">🪙</span>
+          <span class="coin-count">120</span>
+          <span class="coin-add" id="btn-add-coins-game" title="Get More Coins">+</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timer & Progress -->
+    <div class="game-info-bar">
+      <div class="game-timer">
+        <span class="timer-icon">⏱️</span>
+        <span id="game-timer-value">00:00</span>
+      </div>
+      <div class="game-progress">
+        <span>🔍</span>
+        <span id="game-progress-value">0/8</span>
+      </div>
+    </div>
+
+    <!-- Clue Words -->
+    <div class="clue-section">
+      <div class="clue-title" id="clue-title">Find the meaning of these Hindi words:</div>
+      <div class="clue-words" id="clue-words">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+
+    <!-- Word Search Grid -->
+    <div class="grid-container">
+      <div class="word-grid" id="word-grid">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="game-actions">
+      <button class="action-btn" id="btn-hint">
+        <div class="action-icon">
+          💡
+          <span class="action-badge" id="hint-badge">30🪙</span>
+        </div>
+        <span class="action-label">Hint (30🪙)</span>
+      </button>
+
+      <button class="action-btn" id="btn-clear">
+        <div class="action-icon">🧹</div>
+        <span class="action-label">Clear</span>
+      </button>
+
+      <button class="action-btn" id="btn-shuffle">
+        <div class="action-icon">🔀</div>
+        <span class="action-label">Shuffle</span>
+      </button>
+    </div>
+
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════
+       SCREEN 6: SETTINGS
+       ════════════════════════════════════════════════════════ -->
+  <div id="settings-screen" class="screen">
+
+    <!-- Header -->
+    <div class="screen-header">
+      <button class="back-btn" data-target="mode-selection" aria-label="Back">←</button>
+      <span class="title">⚙️ Settings</span>
+      <div style="width:36px"></div>
+    </div>
+
+    <!-- Settings List -->
+    <div class="settings-list">
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-icon">🔊</span>
+          <div>
+            <div class="setting-name">Sound Effects</div>
+            <div class="setting-desc">Game sounds and haptic feedback</div>
+          </div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-sound" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-icon" id="settings-theme-icon">🌙</span>
+          <div>
+            <div class="setting-name">Dark / White Mode</div>
+            <div class="setting-desc" id="settings-theme-desc">Switch between Dark and White theme</div>
+          </div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggle-theme">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-icon">📱</span>
+          <div>
+            <div class="setting-name">Haptic Feedback</div>
+            <div class="setting-desc">Vibrate on word found</div>
+          </div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-icon">ℹ️</span>
+          <div>
+            <div class="setting-name">About</div>
+            <div class="setting-desc">Word Search Explorer v1.0</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="btn-reset" id="btn-reset-progress">
+      🗑️ Reset All Progress
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     OVERLAYS (outside screens, fixed positioned)
+     ══════════════════════════════════════════════════════════ -->
+
+<!-- Level Complete Overlay -->
+<div class="level-complete-overlay" id="level-complete-overlay">
+  <div class="level-complete-card">
+
+    <div class="trophy-container">
+      <span class="trophy-icon">🏆</span>
+    </div>
+
+    <div class="complete-banner">Level Complete!</div>
+
+    <div class="complete-stars" id="complete-stars">
+      <span class="star earned">★</span>
+      <span class="star earned">★</span>
+      <span class="star">★</span>
+    </div>
+
+    <div class="complete-stats">
+      <div class="stat-row">
+        <span class="stat-label">⏱️ Time Taken</span>
+        <span class="stat-value" id="complete-time">01:45</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">🔍 Words Found</span>
+        <span class="stat-value" id="complete-words">8/8</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">🪙 Coins Earned</span>
+        <span class="stat-value coins" id="complete-coins">+20</span>
+      </div>
+    </div>
+
+    <div class="complete-actions">
+      <button class="btn-next-level" id="btn-next-level">
+        Next Level <span>›</span>
+      </button>
+      <button class="btn-replay" id="btn-replay-level">
+        Replay 🔄
+      </button>
+      <button class="btn-home" id="btn-go-home">
+        🏠 Home
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Hint Popup Overlay -->
+<div class="hint-overlay" id="hint-overlay">
+  <div class="hint-card">
+
+    <div class="hint-header">
+      <span class="hint-title">💡 Hint</span>
+      <button class="hint-close" id="hint-close">✕</button>
+    </div>
+
+    <div class="hindi-word" id="hint-hindi-word">पानी</div>
+
+    <div class="meaning-badge" id="hint-meaning-label">Meaning</div>
+
+    <div class="english-word" id="hint-english-word">Water</div>
+
+    <button class="hint-ok-btn" id="hint-ok">OK</button>
+
+  </div>
+</div>
+
+<!-- Insufficient Coins Overlay -->
+<div class="modal-overlay" id="insufficient-coins-overlay">
+  <div class="app-modal-card">
+    <div class="modal-icon-badge">🪙</div>
+    <h2 class="modal-title">Need More Coins!</h2>
+    <p class="modal-subtitle">A hint costs <strong>30 coins</strong>. You currently have <strong id="modal-current-coins">0</strong> coins.</p>
+    <div class="modal-info-box">
+      🎬 Watch a short sponsored ad to get this hint &amp; earn <strong>+50 bonus coins</strong>!
+    </div>
+    <div class="modal-actions">
+      <button class="btn-watch-ad" id="btn-watch-ad-hint">
+        <span>▶️</span> Watch Ad to Get Hint
+      </button>
+      <button class="btn-modal-cancel" id="btn-close-coins-modal">
+        Maybe Later
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Rewarded Ad Simulator Overlay -->
+<div class="modal-overlay" id="ad-simulator-overlay">
+  <div class="ad-card">
+    <span class="ad-sponsor-label">Sponsored Ad</span>
+    <div class="ad-video-mockup">
+      <span class="ad-countdown-pill" id="ad-countdown">Ad: 3s</span>
+      <span style="font-size: 38px;">🎬</span>
+      <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">Word Explorer Premium</span>
+    </div>
+    <div class="ad-progress-container">
+      <div class="ad-progress-bar" id="ad-progress-bar"></div>
+    </div>
+    <p style="font-size: 12px; color: rgba(255,255,255,0.7);" id="ad-status-text">Watching ad for free hint &amp; +50 coins...</p>
+  </div>
+</div>
+
+
+<!-- Scripts (order matters: dependencies first) -->
+<script src="js/utils.js"></script>
+<script src="js/words.js"></script>
+<script src="js/grid-generator.js"></script>
+<script src="js/database.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
