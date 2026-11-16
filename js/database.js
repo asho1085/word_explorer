@@ -30,7 +30,7 @@ const GameDB = {
       await this.db.settings.bulkPut([
         { key: 'sound', value: true },
         { key: 'theme', value: 'dark' },
-        { key: 'totalCoins', value: 120 },
+        { key: 'totalCoins', value: 0 },
         { key: 'hintsRemaining', value: 3 },
       ]);
     }
@@ -101,6 +101,39 @@ const GameDB = {
       : 1;
   },
 
+  /**
+   * Get total stars earned across all modes
+   */
+  async getTotalStars() {
+    try {
+      if (!this.db) return 0;
+      const all = await this.db.progress.toArray();
+      return all.reduce((sum, item) => sum + (item.stars || 0), 0);
+    } catch (_) {
+      return 0;
+    }
+  },
+
+  /**
+   * Get total completed levels across all modes
+   */
+  async getTotalCompletedLevels() {
+    try {
+      if (!this.db) return 0;
+      const all = await this.db.progress.toArray();
+      return all.filter(item => item.completed).length;
+    } catch (_) {
+      return 0;
+    }
+  },
+
+  /**
+   * Alias for getTotalCompletedLevels
+   */
+  async getTotalCompleted() {
+    return await this.getTotalCompletedLevels();
+  },
+
   // ── Coins Operations ───────────────────────────────────────
   HINT_COST: 30,
 
@@ -126,9 +159,26 @@ const GameDB = {
       }
     } catch (_) {}
 
-    const defaultCoins = 120;
+    const defaultCoins = 0;
     try { localStorage.setItem('user_coins', defaultCoins); } catch (_) {}
     return defaultCoins;
+  },
+
+  /**
+   * Set exact coins and persist to localStorage and IndexedDB
+   */
+  async setCoins(amount) {
+    const validAmount = Math.max(0, parseInt(amount, 10) || 0);
+    try { localStorage.setItem('user_coins', validAmount); } catch (_) {}
+
+    try {
+      if (this.db) {
+        await this.db.settings.put({ key: 'totalCoins', value: validAmount });
+      }
+    } catch (e) {
+      console.warn('Dexie setCoins fallback:', e);
+    }
+    return validAmount;
   },
 
   /**
@@ -247,7 +297,7 @@ const GameDB = {
     await this.db.settings.bulkPut([
       { key: 'sound', value: true },
       { key: 'theme', value: 'dark' },
-      { key: 'totalCoins', value: 120 },
+      { key: 'totalCoins', value: 0 },
       { key: 'hintsRemaining', value: 3 },
     ]);
   }

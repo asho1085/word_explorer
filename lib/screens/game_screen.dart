@@ -1,32 +1,32 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../data/word_repository.dart';
 import '../models/game_models.dart';
-import '../services/ad_service.dart';
 import '../services/database_service.dart';
 import '../services/grid_generator_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/banner_ad_widget.dart';
 import '../widgets/hint_dialog.dart';
 import '../widgets/level_complete_dialog.dart';
+import '../widgets/nature_leaf_background.dart';
 import '../widgets/word_highlighter_painter.dart';
 
 class GameScreen extends StatefulWidget {
   final String mode;
   final int level;
 
-  const GameScreen({
-    super.key,
-    required this.mode,
-    required this.level,
-  });
+  const GameScreen({super.key, required this.mode, required this.level});
 
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
 
 class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
+  /// Shared by the clue chips and the board so both read at the same size.
+  static const double _boardFontSize = 20.0;
+
   final GridGeneratorService _gridService = GridGeneratorService();
   late int _currentLevel;
   late int _gridDim;
@@ -46,9 +46,10 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
   // Timer & Stats
   int _secondsElapsed = 0;
+  final ValueNotifier<int> _elapsedTime = ValueNotifier(0);
   Timer? _gameTimer;
   int _hintsUsed = 0;
-  int _coins = 120;
+  int _coins = 0;
   bool _isCompleted = false;
 
   final GlobalKey _gridKey = GlobalKey();
@@ -62,6 +63,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+    _highlightAnimController.addListener(_updateHighlightProgress);
 
     _pulseAnimController = AnimationController(
       vsync: this,
@@ -75,9 +77,21 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void dispose() {
     _gameTimer?.cancel();
     _hintTimer?.cancel();
+    _highlightAnimController.removeListener(_updateHighlightProgress);
     _highlightAnimController.dispose();
     _pulseAnimController.dispose();
+    _elapsedTime.dispose();
     super.dispose();
+  }
+
+  /// Single listener drives the draw-in animation of the most recent word.
+  /// The grid's [AnimatedBuilder] repaints on every controller tick, so no
+  /// extra setState is required here.
+  void _updateHighlightProgress() {
+    if (_wordHighlights.isEmpty) return;
+    _wordHighlights.last.progress = Curves.easeOutCubic
+        .transform(_highlightAnimController.value)
+        .clamp(0.0, 1.0);
   }
 
   void _initLevel() {
@@ -85,6 +99,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     _hintTimer?.cancel();
 
     _secondsElapsed = 0;
+    _elapsedTime.value = 0;
     _hintsUsed = 0;
     _isCompleted = false;
     _selectedCells.clear();
@@ -113,9 +128,7 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
   void _startTimer() {
     _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
-        setState(() {
-          _secondsElapsed++;
-        });
+        _elapsedTime.value = ++_secondsElapsed;
       }
     });
   }
@@ -194,7 +207,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
       final newSelection = <GridCellCoord>[];
       for (int i = 0; i <= steps; i++) {
-        newSelection.add(GridCellCoord(start.row + i * stepR, start.col + i * stepC));
+        newSelection.add(
+          GridCellCoord(start.row + i * stepR, start.col + i * stepC),
+        );
       }
 
       setState(() {
@@ -209,7 +224,9 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
 
     // Read selected letters
     final forwardWord = _selectedCells.map((c) => _grid[c.row][c.col]).join();
-    final reverseWord = _selectedCells.reversed.map((c) => _grid[c.row][c.col]).join();
+    final reverseWord = _selectedCells.reversed
+        .map((c) => _grid[c.row][c.col])
+        .join();
 
     final isHorizontal = _selectedCells.first.row == _selectedCells.last.row;
     final isLeftToRight = _selectedCells.first.col <= _selectedCells.last.col;
@@ -255,22 +272,14 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
         setState(() {
           clue.isFound = true;
           clue.colorIndex = i % AppTheme.wordColors.length;
+          // Snap any in-flight highlight to full before animating the new one.
+          for (final highlight in _wordHighlights) {
+            highlight.progress = 1.0;
+          }
           _wordHighlights.add(newHighlight);
         });
 
-        _highlightAnimController.reset();
-        final anim = CurvedAnimation(
-          parent: _highlightAnimController,
-          curve: Curves.easeOutCubic,
-        );
-        anim.addListener(() {
-          if (mounted) {
-            setState(() {
-              newHighlight.progress = anim.value.clamp(0.0, 1.0);
-            });
-          }
-        });
-        _highlightAnimController.forward();
+        _highlightAnimController.forward(from: 0);
 
         if (DatabaseService.instance.getVibrationEnabled()) {
           HapticFeedback.mediumImpact();
@@ -331,25 +340,17 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
             totalWords: _clues.length,
             coinsEarned: earnedCoins,
             onNextLevel: () {
-              AdService.instance.showInterstitialAd(
-                context: context,
-                onDismissed: () {
-                  if (_currentLevel < WordRepository.totalLevels) {
-                    setState(() {
-                      _currentLevel++;
-                    });
-                    _initLevel();
-                  } else {
-                    Navigator.of(context).pop();
-                  }
-                },
-              );
+              if (_currentLevel < WordRepository.totalLevels) {
+                setState(() {
+                  _currentLevel++;
+                });
+                _initLevel();
+              } else {
+                Navigator.of(context).pop();
+              }
             },
             onHome: () {
-              AdService.instance.showInterstitialAd(
-                context: context,
-                onDismissed: () => Navigator.of(context).pop(),
-              );
+              Navigator.of(context).pop();
             },
           ),
         );
@@ -367,283 +368,81 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
       );
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: AppTheme.bgCard,
-        content: Text('Grid letters shuffled!', style: TextStyle(color: Colors.white)),
-        duration: Duration(milliseconds: 1200),
+      SnackBar(
+        backgroundColor: AppTheme.getCard(context),
+        content: Text(
+          'Filler letters shuffled! Target words remain in place.',
+          style: TextStyle(color: AppTheme.getText(context)),
+        ),
+        duration: const Duration(milliseconds: 1400),
       ),
     );
   }
 
-  // Hint action (Watch Ad or use 30 coins)
+  // Hint action (Single clean dialog with responsive Reveal button)
   void _onHint() async {
     final unfoundClues = _clues.where((c) => !c.isFound).toList();
     if (unfoundClues.isEmpty) return;
 
     final targetClue = unfoundClues.first;
     final currentCoins = DatabaseService.instance.getCoins();
-    final hasEnoughCoins = currentCoins >= DatabaseService.hintCost;
 
     if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: const [
-            Icon(Icons.lightbulb_rounded, color: AppTheme.gold, size: 28),
-            SizedBox(width: 8),
-            Text(
-              'Get a Word Hint',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Choose how you want to unlock this hint for "${targetClue.display}":',
-              style: const TextStyle(color: AppTheme.textMuted, fontSize: 14),
-            ),
-            const SizedBox(height: 16),
 
-            // Option 1: Watch Ad (Free + 50 Coins)
-            InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: () {
-                Navigator.of(ctx).pop();
-                _watchAdForHint(targetClue);
-              },
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: AppTheme.emerald.withAlpha(25),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.emerald.withAlpha(80), width: 1.5),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: AppTheme.emerald,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Watch Video Ad',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            'FREE Hint + 50 Bonus Coins 🎉',
-                            style: TextStyle(color: AppTheme.emerald, fontSize: 12, fontWeight: FontWeight.w600),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Option 2: Use 30 Coins
-            InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: hasEnoughCoins
-                  ? () async {
-                      Navigator.of(ctx).pop();
-                      final used = await DatabaseService.instance.useHint();
-                      if (used) {
-                        _hintsUsed++;
-                        if (mounted) {
-                          setState(() {
-                            _coins = DatabaseService.instance.getCoins();
-                          });
-                          _revealHint(targetClue);
-                        }
-                      }
-                    }
-                  : null,
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: hasEnoughCoins ? AppTheme.gold.withAlpha(20) : Colors.white.withAlpha(10),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: hasEnoughCoins ? AppTheme.gold.withAlpha(70) : Colors.white.withAlpha(20),
-                    width: 1.2,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: hasEnoughCoins ? AppTheme.gold : Colors.grey,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.monetization_on_rounded, color: Colors.white, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Use 30 Coins',
-                            style: TextStyle(
-                              color: hasEnoughCoins ? Colors.white : Colors.white38,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            hasEnoughCoins
-                                ? 'Current balance: $currentCoins coins'
-                                : 'Not enough coins ($currentCoins / 30)',
-                            style: TextStyle(
-                              color: hasEnoughCoins ? AppTheme.gold : Colors.white38,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel', style: TextStyle(color: AppTheme.textMuted)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _watchAdForHint(ClueItem targetClue) {
-    AdService.instance.showRewardedAd(
-      context: context,
-      onUserEarnedReward: (reward) async {
-        await DatabaseService.instance.addCoins(50);
-        await DatabaseService.instance.useHint();
-        if (mounted) {
-          setState(() {
-            _coins = DatabaseService.instance.getCoins();
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: AppTheme.emerald,
-              content: Text(
-                '🎉 Ad reward received! +50 Coins earned.',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              duration: Duration(seconds: 2),
-            ),
-          );
-          _revealHint(targetClue);
-        }
-      },
-      onFailedToShow: () {
-        _simulateWatchAd(targetClue);
-      },
-    );
-  }
-
-  void _simulateWatchAd(ClueItem targetClue) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.bgCard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.tv_rounded, color: AppTheme.gold, size: 48),
-              SizedBox(height: 16),
-              Text(
-                'Watching Rewarded Ad...',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              SizedBox(height: 16),
-              LinearProgressIndicator(
-                color: AppTheme.emerald,
-                backgroundColor: AppTheme.bgMedium,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    Future.delayed(const Duration(seconds: 2), () async {
-      if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
-
-      // Grant 50 coins and use 30 for the hint (net +20 or free hint + bonus coins)
-      await DatabaseService.instance.addCoins(50);
-      await DatabaseService.instance.useHint();
-
-      if (mounted) {
-        setState(() {
-          _coins = DatabaseService.instance.getCoins();
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: AppTheme.emerald,
-            content: Text('🎉 Ad reward received! +50 Coins earned.', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            duration: Duration(seconds: 2),
-          ),
-        );
-        _revealHint(targetClue);
-      }
-    });
-  }
-
-  void _revealHint(ClueItem targetClue) {
-    if (!mounted) return;
     showDialog(
       context: context,
       builder: (ctx) => HintDialog(
         clue: targetClue,
-        onHighlightWord: () {
-          final cells = _placements[targetClue.answer];
-          if (cells != null) {
-            setState(() {
-              _hintCells = Set.from(cells);
-            });
-            _hintTimer?.cancel();
-            _hintTimer = Timer(const Duration(seconds: 3), () {
-              if (mounted) {
-                setState(() {
-                  _hintCells.clear();
-                });
-              }
-            });
+        coins: currentCoins,
+        cost: DatabaseService.hintCost,
+        onReveal: () async {
+          final used = await DatabaseService.instance.useHint();
+          if (used) {
+            _hintsUsed++;
+            if (mounted) {
+              setState(() {
+                _coins = DatabaseService.instance.getCoins();
+              });
+              _revealHintOnGrid(targetClue);
+            }
           }
         },
       ),
     );
+  }
+
+  void _revealHintOnGrid(ClueItem targetClue) {
+    final cells = _placements[targetClue.answer];
+    if (cells != null && cells.isNotEmpty) {
+      setState(() {
+        _hintCells = Set.from(cells);
+      });
+      _hintTimer?.cancel();
+      // Keep hint active for 7 seconds so player has ample time to trace it
+      _hintTimer = Timer(const Duration(seconds: 7), () {
+        if (mounted) {
+          setState(() {
+            _hintCells.clear();
+          });
+        }
+      });
+
+      if (DatabaseService.instance.getVibrationEnabled()) {
+        HapticFeedback.mediumImpact();
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Hint: "${targetClue.answer}" is glowing on the board!',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.fromLTRB(12, 0, 12, 96),
+        ),
+      );
+    }
   }
 
   // Clear action
@@ -654,371 +453,480 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     });
   }
 
+  String get _modeTitle {
+    switch (widget.mode) {
+      case 'english':
+        return 'English - Level $_currentLevel Aa';
+      case 'hindi':
+        return 'Hindi - Level $_currentLevel अ';
+      case 'master':
+        return 'Duo - Level $_currentLevel 👑';
+      default:
+        return 'Level $_currentLevel';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = AppTheme.isDark(context);
-    final textColor = AppTheme.getText(context);
-    final mutedColor = AppTheme.getMuted(context);
-    final cardColor = AppTheme.getCard(context);
-    final borderColor = AppTheme.getBorder(context);
-    final foundCount = _clues.where((c) => c.isFound).length;
-
     return Scaffold(
-      bottomNavigationBar: const BannerAdWidget(),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark
-                ? const [
-                    AppTheme.bgDark,
-                    AppTheme.bgMedium,
-                    AppTheme.bgSurface,
-                  ]
-                : const [
-                    Color(0xFFF8FAFC),
-                    Color(0xFFF1F5F9),
-                    Color(0xFFE2E8F0),
-                  ],
-          ),
-        ),
+      body: NatureLeafBackground(
         child: SafeArea(
-          child: Column(
-            children: [
-              // 1. Top Header Bar (Level, Timer, Coins, Theme)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: borderColor),
-                        ),
-                        child: Icon(Icons.arrow_back_ios_new_rounded, color: textColor, size: 18),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final landscape = constraints.maxWidth > constraints.maxHeight;
+              final compact = constraints.maxHeight < 620;
+              final inset = compact ? 8.0 : 16.0;
+              final gap = compact ? 2.0 : 10.0;
+              final width = constraints.maxWidth - inset * 2;
+              final height = constraints.maxHeight - (compact ? 8 : 16);
+              final infoHeight = math.max(
+                20.0,
+                MediaQuery.textScalerOf(context).scale(12) * 1.2 + 2,
+              );
+              final controlsHeight = compact ? 48.0 : 72.0;
+              final headerHeight = compact ? 44.0 : 52.0;
+              final chromeHeight =
+                  headerHeight + infoHeight + controlsHeight + gap * 3;
+              var clues = _measureClues(width, false);
+              var denseClues = false;
+              if (height - chromeHeight - clues.height < 220) {
+                denseClues = true;
+                clues = _measureClues(width, true);
+                while (height - chromeHeight - clues.height < 176 &&
+                    clues.fontSize > 10) {
+                  clues = _measureClues(
+                    width,
+                    true,
+                    fontSize: clues.fontSize - 0.5,
+                  );
+                }
+              }
+
+              Widget panel(double panelWidth, _ClueLayout metrics, bool dense) {
+                return SizedBox(
+                  width: panelWidth,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: headerHeight,
+                        child: _buildHeader(panelWidth),
                       ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              'LEVEL $_currentLevel',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.5,
-                                color: textColor,
-                              ),
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.timer_outlined, color: mutedColor, size: 14),
-                              const SizedBox(width: 4),
-                              Text(
-                                _formatTime(_secondsElapsed),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: mutedColor,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+                      SizedBox(
+                        height: infoHeight,
+                        child: _buildInfo(panelWidth),
                       ),
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          onPressed: () async {
-                            final currentDark = DatabaseService.instance.isDarkMode();
-                            await DatabaseService.instance.setIsDarkMode(!currentDark);
-                          },
-                          icon: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: cardColor,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: borderColor),
-                            ),
-                            child: Icon(
-                              isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                              color: isDark ? AppTheme.gold : AppTheme.orange,
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppTheme.gold.withAlpha(80)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(isDark ? 60 : 15),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.monetization_on, color: AppTheme.gold, size: 18),
-                              const SizedBox(width: 5),
-                              Text(
-                                '$_coins',
-                                style: TextStyle(
-                                  color: textColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      SizedBox(height: gap),
+                      _buildClues(metrics, dense),
+                      if (landscape) const Spacer(),
+                      if (!landscape) ...[
+                        SizedBox(height: gap),
+                        Expanded(child: Center(child: _buildBoard())),
                       ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // 2. Clues / Words Found Section (Matching image chips)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      widget.mode == 'master' ? 'HINDI CLUES' : 'WORDS TO FIND',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
-                        color: mutedColor,
+                      SizedBox(height: gap),
+                      SizedBox(
+                        height: controlsHeight,
+                        child: _buildControls(compact),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: AppTheme.emerald.withAlpha(30),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '$foundCount / ${_clues.length}',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.emerald,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Words Wrap Chips
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  constraints: const BoxConstraints(maxHeight: 90),
-                  child: SingleChildScrollView(
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _clues.map((clue) {
-                        final isFound = clue.isFound;
-                        final color = isFound
-                            ? AppTheme.wordColors[clue.colorIndex]
-                            : cardColor;
-
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: isFound ? color.withAlpha(50) : color,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isFound ? color : borderColor,
-                              width: 1.2,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (isFound) ...[
-                                Icon(Icons.check_circle_rounded, color: color, size: 14),
-                                const SizedBox(width: 5),
-                              ],
-                              Text(
-                                clue.display,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: isFound ? color : textColor,
-                                  decoration: isFound ? TextDecoration.lineThrough : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
+                    ],
                   ),
-                ),
-              ),
+                );
+              }
 
-              const SizedBox(height: 12),
-
-              // 3. Word Search Grid Area
-              Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: AspectRatio(
-                      aspectRatio: 1.0,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: cardColor,
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: borderColor, width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(isDark ? 100 : 20),
-                              blurRadius: 20,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final side = constraints.biggest.shortestSide;
-                            return Center(
-                              child: SizedBox(
-                                key: _gridKey,
-                                width: side,
-                                height: side,
-                                child: GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  onPanStart: _onPanStart,
-                                  onPanUpdate: _onPanUpdate,
-                                  onPanEnd: _onPanEnd,
-                                  child: Stack(
-                                    children: [
-                                      // Continuous rounded highlighter capsules (matching reference image)
-                                      Positioned.fill(
-                                        child: AnimatedBuilder(
-                                          animation: Listenable.merge([
-                                            _highlightAnimController,
-                                            _pulseAnimController,
-                                          ]),
-                                          builder: (context, _) {
-                                            return CustomPaint(
-                                              size: Size(side, side),
-                                              painter: WordHighlighterPainter(
-                                                gridDim: _gridDim,
-                                                highlights: _wordHighlights,
-                                                selectedCells: _selectedCells,
-                                                hintCells: _hintCells,
-                                                animationValue: _pulseAnimController.value,
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-
-                                      // Letters Grid (Clean, sharp, sitting directly on top in exact rows & cols)
-                                      Positioned.fill(
-                                        child: Column(
-                                          children: List.generate(_gridDim, (row) {
-                                            return Expanded(
-                                              child: Row(
-                                                children: List.generate(_gridDim, (col) {
-                                                  return Expanded(
-                                                    child: _buildCell(
-                                                      letter: _grid[row][col],
-                                                      isDark: isDark,
-                                                      textColor: textColor,
-                                                    ),
-                                                  );
-                                                }),
-                                              ),
-                                            );
-                                          }),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              // 4. Bottom Controls Bar (Shuffle, Hint, Clear)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
+              Widget content;
+              if (landscape) {
+                final maxSide = math.min(height, width - 228 - gap);
+                var side = maxSide;
+                var panelWidth = width - side - gap;
+                var metrics = _measureClues(panelWidth, false);
+                var dense = false;
+                while (metrics.height + chromeHeight > height && side > 176) {
+                  side -= 4;
+                  panelWidth = width - side - gap;
+                  metrics = _measureClues(panelWidth, false);
+                }
+                if (metrics.height + chromeHeight > height) {
+                  dense = true;
+                  side = maxSide;
+                  panelWidth = width - side - gap;
+                  metrics = _measureClues(panelWidth, true);
+                  while (metrics.height + chromeHeight > height && side > 176) {
+                    side -= 4;
+                    panelWidth = width - side - gap;
+                    metrics = _measureClues(panelWidth, true);
+                  }
+                }
+                content = Row(
                   children: [
-                    Expanded(
-                      child: _buildActionButton(
-                        icon: Icons.shuffle_rounded,
-                        label: 'Shuffle',
-                        color: AppTheme.blue,
-                        onTap: _onShuffle,
-                        cardColor: cardColor,
-                        textColor: textColor,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildActionButton(
-                        icon: Icons.lightbulb_rounded,
-                        label: 'Hint (30💰)',
-                        color: AppTheme.gold,
-                        onTap: _onHint,
-                        cardColor: cardColor,
-                        textColor: textColor,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildActionButton(
-                        icon: Icons.clear_all_rounded,
-                        label: 'Clear',
-                        color: AppTheme.red,
-                        onTap: _onClear,
-                        cardColor: cardColor,
-                        textColor: textColor,
-                      ),
+                    panel(panelWidth, metrics, dense),
+                    SizedBox(width: gap),
+                    SizedBox(
+                      width: side,
+                      child: Center(child: _buildBoard()),
                     ),
                   ],
+                );
+              } else {
+                content = panel(width, clues, denseClues);
+              }
+              return Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: inset,
+                  vertical: compact ? 4 : 8,
                 ),
-              ),
-            ],
+                child: content,
+              );
+            },
           ),
         ),
       ),
+    );
+  }
+
+  BoxDecoration _cardDecoration({double radius = 16}) {
+    final dark = AppTheme.isDark(context);
+    return BoxDecoration(
+      color: dark ? const Color(0xFF132244) : Colors.white,
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(color: AppTheme.getBorder(context)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: dark ? 0.2 : 0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader(double width) {
+    final narrow = width < 280;
+    final textColor = AppTheme.getText(context);
+    return Row(
+      children: [
+        SizedBox(
+          width: 44,
+          child: IconButton(
+            tooltip: 'Back',
+            onPressed: () => Navigator.of(context).pop(),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: textColor,
+              size: 18,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            _modeTitle.replaceFirst(' - ', '\n'),
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: narrow ? 12 : 14,
+              height: 1.15,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: 44,
+          child: IconButton(
+            tooltip: 'Toggle theme',
+            onPressed: () async {
+              await DatabaseService.instance.setIsDarkMode(
+                !DatabaseService.instance.isDarkMode(),
+              );
+            },
+            icon: Icon(
+              AppTheme.isDark(context)
+                  ? Icons.light_mode_rounded
+                  : Icons.dark_mode_rounded,
+              color: textColor,
+              size: 20,
+            ),
+          ),
+        ),
+        if (!narrow) _buildCoins(),
+      ],
+    );
+  }
+
+  Widget _buildCoins() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      decoration: _cardDecoration(radius: 20),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.monetization_on_rounded,
+            color: AppTheme.gold,
+            size: 16,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            '$_coins',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              height: 1.2,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.getText(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfo(double width) {
+    final foundCount = _clues.where((clue) => clue.isFound).length;
+    final style = GoogleFonts.poppins(
+      fontSize: 12,
+      height: 1.2,
+      fontWeight: FontWeight.w600,
+      color: AppTheme.getMuted(context),
+    );
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        ValueListenableBuilder<int>(
+          valueListenable: _elapsedTime,
+          builder: (context, seconds, _) => Text(
+            _formatTime(seconds),
+            key: const ValueKey('game-timer'),
+            style: style,
+          ),
+        ),
+        if (width >= 280)
+          Text(
+            width >= 360 ? 'WORDS TO FIND' : 'FIND WORDS',
+            style: style.copyWith(fontSize: 10),
+          ),
+        if (width < 280) _buildCoins(),
+        Text(
+          '$foundCount/${_clues.length}',
+          key: const ValueKey('game-progress'),
+          semanticsLabel: '$foundCount of ${_clues.length} words found',
+          style: style,
+        ),
+      ],
+    );
+  }
+
+  TextStyle _clueStyle(bool dense, {double? fontSize}) => GoogleFonts.poppins(
+    fontSize: fontSize ?? (dense ? 12 : 13),
+    height: 1.2,
+    letterSpacing: 0,
+    fontWeight: FontWeight.w700,
+    color: AppTheme.getText(context),
+  );
+
+  _ClueLayout _measureClues(double width, bool dense, {double? fontSize}) {
+    final resolvedFontSize = fontSize ?? (dense ? 12.0 : 13.0);
+    final padding = dense ? 2.0 : 10.0;
+    final gap = dense ? 2.0 : 6.0;
+    final innerWidth = width - padding * 2 - 2;
+    final sizes = <Size>[];
+    var runWidth = 0.0;
+    var runHeight = 0.0;
+    var height = 0.0;
+    for (final clue in _clues) {
+      final painter = TextPainter(
+        text: TextSpan(
+          text: clue.display,
+          style: _clueStyle(dense, fontSize: resolvedFontSize),
+        ),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+        locale: Localizations.maybeLocaleOf(context),
+      )..layout(maxWidth: innerWidth - (dense ? 8 : 20));
+      final size = Size(
+        math.min(innerWidth, painter.width.ceilToDouble() + (dense ? 8 : 20)),
+        painter.height.ceilToDouble() + (dense ? 2 : 10),
+      );
+      painter.dispose();
+      sizes.add(size);
+      if (runWidth > 0 && runWidth + gap + size.width > innerWidth) {
+        height += runHeight + gap;
+        runWidth = 0;
+        runHeight = 0;
+      }
+      runWidth += (runWidth == 0 ? 0 : gap) + size.width;
+      runHeight = math.max(runHeight, size.height);
+    }
+    return _ClueLayout(
+      sizes,
+      height + runHeight + padding * 2 + 2,
+      resolvedFontSize,
+    );
+  }
+
+  Widget _buildClues(_ClueLayout metrics, bool dense) {
+    final dark = AppTheme.isDark(context);
+    return Container(
+      key: const ValueKey('game-clues'),
+      width: double.infinity,
+      height: metrics.height,
+      padding: EdgeInsets.all(dense ? 2 : 10),
+      decoration: _cardDecoration(),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: dense ? 2 : 6,
+        runSpacing: dense ? 2 : 6,
+        children: List.generate(_clues.length, (index) {
+          final clue = _clues[index];
+          return Semantics(
+            label: clue.display,
+            value: clue.isFound ? 'Found' : 'Not found',
+            excludeSemantics: true,
+            child: AnimatedContainer(
+              key: ValueKey('game-clue-$index'),
+              duration: const Duration(milliseconds: 200),
+              width: metrics.sizes[index].width,
+              height: metrics.sizes[index].height,
+              alignment: Alignment.center,
+              padding: EdgeInsets.symmetric(
+                horizontal: dense ? 3 : 9,
+                vertical: dense ? 1 : 4,
+              ),
+              decoration: BoxDecoration(
+                color: clue.isFound
+                    ? const Color(0x262ECC71)
+                    : (dark
+                          ? const Color(0x0DFFFFFF)
+                          : const Color(0xFFF1F5F9)),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: clue.isFound
+                      ? const Color(0x662ECC71)
+                      : AppTheme.getBorder(context),
+                ),
+              ),
+              child: Text(
+                clue.display,
+                textAlign: TextAlign.center,
+                style: _clueStyle(dense, fontSize: metrics.fontSize).copyWith(
+                  color: clue.isFound
+                      ? AppTheme.emerald
+                      : AppTheme.getText(context),
+                  decoration: clue.isFound ? TextDecoration.lineThrough : null,
+                  decorationColor: AppTheme.emerald,
+                  decorationThickness: 2,
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildBoard() {
+    return AspectRatio(
+      aspectRatio: 1,
+      child: RepaintBoundary(
+        key: const ValueKey('game-board'),
+        child: Container(
+          decoration: _cardDecoration(radius: 22),
+          padding: const EdgeInsets.all(4),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final side = constraints.biggest.shortestSide;
+              return SizedBox(
+                key: _gridKey,
+                width: side,
+                height: side,
+                child: GestureDetector(
+                  key: const ValueKey('game-grid'),
+                  behavior: HitTestBehavior.opaque,
+                  onPanStart: _onPanStart,
+                  onPanUpdate: _onPanUpdate,
+                  onPanEnd: _onPanEnd,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: RepaintBoundary(
+                          child: AnimatedBuilder(
+                            animation: Listenable.merge([
+                              _highlightAnimController,
+                              _pulseAnimController,
+                            ]),
+                            builder: (context, _) => CustomPaint(
+                              painter: WordHighlighterPainter(
+                                gridDim: _gridDim,
+                                highlights: _wordHighlights,
+                                selectedCells: _selectedCells,
+                                hintCells: _hintCells,
+                                animationValue: _pulseAnimController.value,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: RepaintBoundary(
+                          child: Column(
+                            children: List.generate(
+                              _gridDim,
+                              (row) => Expanded(
+                                child: Row(
+                                  children: List.generate(
+                                    _gridDim,
+                                    (col) => Expanded(
+                                      child: SizedBox(
+                                        key: ValueKey('game-cell-$row-$col'),
+                                        child: _buildCell(
+                                          letter: _grid[row][col],
+                                          isDark: AppTheme.isDark(context),
+                                          textColor: AppTheme.getText(context),
+                                          fontSize: math.min(
+                                            _boardFontSize,
+                                            side / _gridDim * 0.65,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControls(bool compact) {
+    return Row(
+      children: [
+        _buildWebActionButton(
+          icon: Icons.lightbulb_rounded,
+          label: 'Hint (30🪙)',
+          onTap: _onHint,
+          compact: compact,
+        ),
+        const SizedBox(width: 6),
+        _buildWebActionButton(
+          icon: Icons.cleaning_services_rounded,
+          label: 'Clear',
+          onTap: _onClear,
+          compact: compact,
+        ),
+        const SizedBox(width: 6),
+        _buildWebActionButton(
+          icon: Icons.shuffle_rounded,
+          label: 'Shuffle',
+          onTap: _onShuffle,
+          compact: compact,
+        ),
+      ],
     );
   }
 
@@ -1026,28 +934,20 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     required String letter,
     required bool isDark,
     required Color textColor,
+    required double fontSize,
   }) {
     return Center(
       child: FittedBox(
         fit: BoxFit.scaleDown,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2.0),
+          padding: const EdgeInsets.symmetric(horizontal: 1.5),
           child: Text(
             letter,
-            style: TextStyle(
-              fontSize: _gridDim > 9 ? 16 : 19,
-              fontWeight: FontWeight.w900,
+            style: GoogleFonts.poppins(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w800,
               color: isDark ? Colors.white : textColor,
               height: 1.0,
-              shadows: isDark
-                  ? const [
-                      Shadow(
-                        color: Colors.black,
-                        offset: Offset(0, 1),
-                        blurRadius: 2,
-                      ),
-                    ]
-                  : null,
             ),
           ),
         ),
@@ -1055,56 +955,77 @@ class _GameScreenState extends State<GameScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildActionButton({
+  Widget _buildWebActionButton({
     required IconData icon,
     required String label,
-    required Color color,
     required VoidCallback onTap,
-    required Color cardColor,
-    required Color textColor,
+    required bool compact,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withAlpha(80), width: 1.2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(40),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 18),
-              const SizedBox(width: 4),
-              Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      color: textColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
+    return Expanded(
+      child: Semantics(
+        button: true,
+        child: Tooltip(
+          message: label == 'Hint (30🪙)' ? 'Hint (30 coins)' : label,
+          child: Material(
+            color: Colors.transparent,
+            child: Ink(
+              decoration: _cardDecoration(radius: 14),
+              child: InkWell(
+                key: ValueKey(
+                  'game-action-${label.split(' ').first.toLowerCase()}',
+                ),
+                borderRadius: BorderRadius.circular(14),
+                onTap: onTap,
+                child: SizedBox.expand(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            icon,
+                            size: compact ? 16 : 24,
+                            color: AppTheme.gold,
+                          ),
+                          if (compact && label.startsWith('Hint'))
+                            Text(
+                              '30',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: AppTheme.getText(context),
+                              ),
+                            ),
+                        ],
+                      ),
+                      SizedBox(height: compact ? 0 : 6),
+                      Text(
+                        compact && label.startsWith('Hint') ? 'Hint' : label,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: compact ? 11 : 12,
+                          height: 1,
+                          letterSpacing: 0,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.getText(context),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+class _ClueLayout {
+  final List<Size> sizes;
+  final double height;
+  final double fontSize;
+
+  const _ClueLayout(this.sizes, this.height, this.fontSize);
 }

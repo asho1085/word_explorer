@@ -1,14 +1,14 @@
 // ============================================================
 // words.js — Word Data for Word Search Explorer
 // ============================================================
-// 30 Levels per mode, 10 words per level, 100% unique words
+// 50 Levels per mode, 10 words per level, 100% unique words
 // ============================================================
 
 const WORD_DATA = {
 
-  totalLevels: 30,
+  totalLevels: 50,
 
-  // ── English Mode: 30 Levels, 10 words each (300 unique words) ──
+  // ── English Mode: 50 Levels, 10 words each (500 unique words) ──
   english: [
     { level: 1,  words: ['CAT', 'DOG', 'BIRD', 'FISH', 'FROG', 'DUCK', 'DEER', 'BEAR', 'WOLF', 'LION'] },
     { level: 2,  words: ['BED', 'DOOR', 'LAMP', 'DESK', 'CHAIR', 'TABLE', 'CLOCK', 'SOFA', 'SHELF', 'RUG'] },
@@ -40,9 +40,29 @@ const WORD_DATA = {
     { level: 28, words: ['COLD', 'CHILL', 'SLEET', 'HAIL', 'GLACIER', 'ICEBERG', 'ARCTIC', 'TUNDRA', 'POLAR', 'BLIZZARD'] },
     { level: 29, words: ['CROWN', 'SCEPTER', 'REALM', 'PRINCE', 'BARON', 'DUCHESS', 'DYNASTY', 'EMPIRE', 'PALACE', 'REGAL'] },
     { level: 30, words: ['AURA', 'STELLAR', 'ZENITH', 'ETERNAL', 'RADIANT', 'INFINITY', 'ECLIPSE', 'HORIZON', 'CRYSTAL', 'DIVINE'] },
+    { level: 31, words: ['EAGLE', 'HAWK', 'FALCON', 'SWAN', 'HERON', 'RAVEN', 'OWL', 'PARROT', 'DOVE', 'ROBIN'] },
+    { level: 32, words: ['BEE', 'WASP', 'ANT', 'BEETLE', 'MOTH', 'CRICKET', 'SPIDER', 'MANTIS', 'CICADA', 'HORNET'] },
+    { level: 33, words: ['OAK', 'MAPLE', 'WILLOW', 'BAMBOO', 'PALM', 'BONSAI', 'IVY', 'CLOVER', 'VINE', 'ORCHID'] },
+    { level: 34, words: ['CHEF', 'RECIPE', 'ROAST', 'GRILL', 'TOAST', 'BAKE', 'BOIL', 'SAUCE', 'SALAD', 'SOUP'] },
+    { level: 35, words: ['CHERRY', 'PAPAYA', 'GUAVA', 'FIG', 'DATE', 'OLIVE', 'CARROT', 'ONION', 'RADISH', 'GARLIC'] },
+    { level: 36, words: ['TRAIN', 'TRUCK', 'BOAT', 'YACHT', 'TRAM', 'METRO', 'CANOE', 'KAYAK', 'FERRY', 'GLIDER'] },
+    { level: 37, words: ['BREEZE', 'MIST', 'FOG', 'THUNDER', 'GALE', 'HUMID', 'CLIMATE', 'DEW', 'VAPOR', 'TYPHOON'] },
+    { level: 38, words: ['NOVEL', 'POEM', 'DRAMA', 'STAGE', 'ACTOR', 'CANVAS', 'ESSAY', 'VERSE', 'PROSE', 'THEATER'] },
+    { level: 39, words: ['ATOM', 'CELL', 'ENERGY', 'FORCE', 'MASS', 'ACID', 'OPTICS', 'LASER', 'PLASMA', 'MAGNET'] },
+    { level: 40, words: ['REEF', 'TRENCH', 'SPONGE', 'KELP', 'ANEMONE', 'LOBSTER', 'CLAM', 'OYSTER', 'SHRIMP', 'URCHIN'] },
+    { level: 41, words: ['HEART', 'LUNG', 'BRAIN', 'BONE', 'MUSCLE', 'SPINE', 'BLOOD', 'NERVE', 'JOINT', 'TISSUE'] },
+    { level: 42, words: ['JAZZ', 'BLUES', 'OPERA', 'BALLET', 'WALTZ', 'TANGO', 'TEMPO', 'RHYTHM', 'VIOLIN', 'GUITAR'] },
+    { level: 43, words: ['PULSAR', 'QUASAR', 'COSMIC', 'ASTEROID', 'GRAVITY', 'HUBBLE', 'TITAN', 'PROBE', 'AURORA', 'NEUTRINO'] },
+    { level: 44, words: ['TIGER', 'LEOPARD', 'CHEETAH', 'JAGUAR', 'HYENA', 'PANDA', 'ZEBRA', 'GIRAFFE', 'MONKEY', 'RHINO'] },
+    { level: 45, words: ['ARCH', 'PILLAR', 'DOME', 'VAULT', 'ARENA', 'TEMPLE', 'SHRINE', 'PLAZA', 'CABIN', 'VILLA'] },
+    { level: 46, words: ['CLIFF', 'GORGE', 'CRATER', 'MEADOW', 'PLAINS', 'SWAMP', 'MARSH', 'PLATEAU', 'RIDGE', 'PEAK'] },
+    { level: 47, words: ['WIZARD', 'ELF', 'GOBLIN', 'GIANT', 'HERO', 'QUEST', 'TALISMAN', 'MYTHIC', 'RELIC', 'SWORD'] },
+    { level: 48, words: ['PLATINUM', 'TITANIUM', 'ZINC', 'NICKEL', 'COBALT', 'LEAD', 'IRON', 'STEEL', 'EMERALD', 'SAPPHIRE'] },
+    { level: 49, words: ['NOBLE', 'HONEST', 'LOYAL', 'HUMBLE', 'KIND', 'PATIENT', 'FOCUS', 'GRACE', 'VALOR', 'COURAGE'] },
+    { level: 50, words: ['VICTORY', 'TRIUMPH', 'SUMMIT', 'DESTINY', 'LEGEND', 'APEX', 'ELITE', 'PRIME', 'GRAND', 'HEROIC'] },
   ],
 
-  // ── Master Mode: 30 Levels, 10 pairs each (300 unique pairs) ──
+  // ── Master Mode: 50 Levels, 10 pairs each (500 unique pairs) ──
   master: [
     {
       level: 1,
@@ -494,9 +514,309 @@ const WORD_DATA = {
         { hindi: 'शिखर', english: 'PEAK' },
       ]
     },
+    {
+      level: 31,
+      pairs: [
+        { hindi: 'हंस', english: 'SWAN' },
+        { hindi: 'चील', english: 'EAGLE' },
+        { hindi: 'उल्लू', english: 'OWL' },
+        { hindi: 'तोता', english: 'PARROT' },
+        { hindi: 'मधुमक्खी', english: 'BEE' },
+        { hindi: 'चींटी', english: 'ANT' },
+        { hindi: 'पतंग', english: 'MOTH' },
+        { hindi: 'मकड़ी', english: 'SPIDER' },
+        { hindi: 'बत्तख', english: 'DUCK' },
+        { hindi: 'कौवा', english: 'CROW' },
+      ]
+    },
+    {
+      level: 32,
+      pairs: [
+        { hindi: 'वटवृक्ष', english: 'BANYAN' },
+        { hindi: 'ताड़', english: 'PALM' },
+        { hindi: 'बांस', english: 'BAMBOO' },
+        { hindi: 'बांज', english: 'OAK' },
+        { hindi: 'कचनार', english: 'ORCHID' },
+        { hindi: 'लता', english: 'VINE' },
+        { hindi: 'चिनार', english: 'MAPLE' },
+        { hindi: 'कमल', english: 'LOTUS' },
+        { hindi: 'तुलसी', english: 'BASIL' },
+        { hindi: 'चमेली', english: 'JASMINE' },
+      ]
+    },
+    {
+      level: 33,
+      pairs: [
+        { hindi: 'व्हेल', english: 'WHALE' },
+        { hindi: 'शार्क', english: 'SHARK' },
+        { hindi: 'केकड़ा', english: 'CRAB' },
+        { hindi: 'कछुआ', english: 'TURTLE' },
+        { hindi: 'झींगा', english: 'SHRIMP' },
+        { hindi: 'डॉल्फ़िन', english: 'DOLPHIN' },
+        { hindi: 'सीप', english: 'OYSTER' },
+        { hindi: 'मूंगा', english: 'CORAL' },
+        { hindi: 'प्रवाल', english: 'REEF' },
+        { hindi: 'शैवाल', english: 'KELP' },
+      ]
+    },
+    {
+      level: 34,
+      pairs: [
+        { hindi: 'गाजर', english: 'CARROT' },
+        { hindi: 'प्याज', english: 'ONION' },
+        { hindi: 'लहसुन', english: 'GARLIC' },
+        { hindi: 'अदरक', english: 'GINGER' },
+        { hindi: 'हल्दी', english: 'TURMERIC' },
+        { hindi: 'मिर्च', english: 'CHILI' },
+        { hindi: 'लौंग', english: 'CLOVE' },
+        { hindi: 'जीरा', english: 'CUMIN' },
+        { hindi: 'पुदीना', english: 'MINT' },
+        { hindi: 'पालक', english: 'SPINACH' },
+      ]
+    },
+    {
+      level: 35,
+      pairs: [
+        { hindi: 'रसोइया', english: 'COOK' },
+        { hindi: 'तंदूर', english: 'OVEN' },
+        { hindi: 'प्याला', english: 'MUG' },
+        { hindi: 'चिमटा', english: 'TONGS' },
+        { hindi: 'बेलन', english: 'ROLLER' },
+        { hindi: 'ढक्कन', english: 'LID' },
+        { hindi: 'मथानी', english: 'WHISK' },
+        { hindi: 'छलनी', english: 'SIEVE' },
+        { hindi: 'भट्टी', english: 'KILN' },
+        { hindi: 'व्यंजन', english: 'RECIPE' },
+      ]
+    },
+    {
+      level: 36,
+      pairs: [
+        { hindi: 'मेट्रो', english: 'METRO' },
+        { hindi: 'ग्लाइडर', english: 'GLIDER' },
+        { hindi: 'नौकायन', english: 'YACHT' },
+        { hindi: 'बजरा', english: 'BARGE' },
+        { hindi: 'डोंगी', english: 'CANOE' },
+        { hindi: 'कयाक', english: 'KAYAK' },
+        { hindi: 'फेरी', english: 'FERRY' },
+        { hindi: 'ट्राम', english: 'TRAM' },
+        { hindi: 'स्कूटर', english: 'SCOOTER' },
+        { hindi: 'पनडुब्बी', english: 'SUB' },
+      ]
+    },
+    {
+      level: 37,
+      pairs: [
+        { hindi: 'समीर', english: 'BREEZE' },
+        { hindi: 'कोहरा', english: 'FOG' },
+        { hindi: 'धुंध', english: 'MIST' },
+        { hindi: 'ओस', english: 'DEW' },
+        { hindi: 'गर्जन', english: 'THUNDER' },
+        { hindi: 'आंधी', english: 'GALE' },
+        { hindi: 'वाष्प', english: 'VAPOR' },
+        { hindi: 'बवंडर', english: 'TORNADO' },
+        { hindi: 'ओला', english: 'HAIL' },
+        { hindi: 'पाला', english: 'FROST' },
+      ]
+    },
+    {
+      level: 38,
+      pairs: [
+        { hindi: 'हथौड़ा', english: 'HAMMER' },
+        { hindi: 'आरी', english: 'SAW' },
+        { hindi: 'कैंची', english: 'SHEARS' },
+        { hindi: 'पेंचकस', english: 'SCREW' },
+        { hindi: 'कुल्हाड़ी', english: 'AXE' },
+        { hindi: 'तराजू', english: 'SCALE' },
+        { hindi: 'सुई', english: 'NEEDLE' },
+        { hindi: 'धागा', english: 'THREAD' },
+        { hindi: 'कील', english: 'NAIL' },
+        { hindi: 'संड़ासी', english: 'PLIERS' },
+      ]
+    },
+    {
+      level: 39,
+      pairs: [
+        { hindi: 'यकृत', english: 'LIVER' },
+        { hindi: 'फेफड़ा', english: 'LUNG' },
+        { hindi: 'मस्तिष्क', english: 'BRAIN' },
+        { hindi: 'अस्थि', english: 'BONE' },
+        { hindi: 'पेशी', english: 'MUSCLE' },
+        { hindi: 'मेरुदंड', english: 'SPINE' },
+        { hindi: 'रुधिर', english: 'BLOOD' },
+        { hindi: 'धमनी', english: 'ARTERY' },
+        { hindi: 'शिरा', english: 'VEIN' },
+        { hindi: 'त्वचा', english: 'SKIN' },
+      ]
+    },
+    {
+      level: 40,
+      pairs: [
+        { hindi: 'कुर्ता', english: 'TUNIC' },
+        { hindi: 'पगड़ी', english: 'TURBAN' },
+        { hindi: 'शॉल', english: 'SHAWL' },
+        { hindi: 'मोजा', english: 'SOCK' },
+        { hindi: 'दस्ताना', english: 'GLOVE' },
+        { hindi: 'पाजामा', english: 'PANTS' },
+        { hindi: 'केंचुल', english: 'VEST' },
+        { hindi: 'घाघरा', english: 'SKIRT' },
+        { hindi: 'जामा', english: 'ROBE' },
+        { hindi: 'चादर', english: 'SHEET' },
+      ]
+    },
+    {
+      level: 41,
+      pairs: [
+        { hindi: 'परमाणु', english: 'ATOM' },
+        { hindi: 'कोशिका', english: 'CELL' },
+        { hindi: 'ऊर्जा', english: 'ENERGY' },
+        { hindi: 'बल', english: 'FORCE' },
+        { hindi: 'द्रव्यमान', english: 'MASS' },
+        { hindi: 'अम्ल', english: 'ACID' },
+        { hindi: 'चुंबक', english: 'MAGNET' },
+        { hindi: 'प्रकाशिकी', english: 'OPTICS' },
+        { hindi: 'किरणपुंज', english: 'LASER' },
+        { hindi: 'कण', english: 'PARTICLE' },
+      ]
+    },
+    {
+      level: 42,
+      pairs: [
+        { hindi: 'वायलिन', english: 'VIOLIN' },
+        { hindi: 'गिटार', english: 'GUITAR' },
+        { hindi: 'पियानो', english: 'PIANO' },
+        { hindi: 'लय', english: 'TEMPO' },
+        { hindi: 'स्वरसंगति', english: 'CHORD' },
+        { hindi: 'गायन', english: 'VOCAL' },
+        { hindi: 'मधुरिमा', english: 'MELODY' },
+        { hindi: 'नृत्यनाट्य', english: 'BALLET' },
+        { hindi: 'गीतिनाट्य', english: 'OPERA' },
+        { hindi: 'जैज', english: 'JAZZ' },
+      ]
+    },
+    {
+      level: 43,
+      pairs: [
+        { hindi: 'क्षुद्रग्रह', english: 'ASTEROID' },
+        { hindi: 'क्रेटर', english: 'CRATER' },
+        { hindi: 'गुरुत्वाकर्षण', english: 'GRAVITY' },
+        { hindi: 'पल्सर', english: 'PULSAR' },
+        { hindi: 'क्वासर', english: 'QUASAR' },
+        { hindi: 'टाइटन', english: 'TITAN' },
+        { hindi: 'रोवर', english: 'ROVER' },
+        { hindi: 'अन्वेषक', english: 'PROBE' },
+        { hindi: 'ज्वाला', english: 'FLARE' },
+        { hindi: 'ब्रह्मांडीय', english: 'COSMIC' },
+      ]
+    },
+    {
+      level: 44,
+      pairs: [
+        { hindi: 'तेंदुआ', english: 'LEOPARD' },
+        { hindi: 'चीता', english: 'CHEETAH' },
+        { hindi: 'जगुआर', english: 'JAGUAR' },
+        { hindi: 'लकड़बग्घा', english: 'HYENA' },
+        { hindi: 'पांडा', english: 'PANDA' },
+        { hindi: 'ज़ेबरा', english: 'ZEBRA' },
+        { hindi: 'जिराफ़', english: 'GIRAFFE' },
+        { hindi: 'गैंडा', english: 'RHINO' },
+        { hindi: 'ऊदबिलाव', english: 'OTTER' },
+        { hindi: 'वालरस', english: 'WALRUS' },
+      ]
+    },
+    {
+      level: 45,
+      pairs: [
+        { hindi: 'मेहराब', english: 'ARCH' },
+        { hindi: 'स्तंभ', english: 'PILLAR' },
+        { hindi: 'गुंबद', english: 'DOME' },
+        { hindi: 'तिजोरी', english: 'VAULT' },
+        { hindi: 'अखाड़ा', english: 'ARENA' },
+        { hindi: 'मंदिर', english: 'TEMPLE' },
+        { hindi: 'दरगाह', english: 'SHRINE' },
+        { hindi: 'चौक', english: 'PLAZA' },
+        { hindi: 'कुटिया', english: 'CABIN' },
+        { hindi: 'कोठी', english: 'VILLA' },
+      ]
+    },
+    {
+      level: 46,
+      pairs: [
+        { hindi: 'चट्टान', english: 'CLIFF' },
+        { hindi: 'खड्ड', english: 'GORGE' },
+        { hindi: 'चारागाह', english: 'MEADOW' },
+        { hindi: 'मैदानी भाग', english: 'PLAINS' },
+        { hindi: 'कच्छ', english: 'SWAMP' },
+        { hindi: 'दलदल', english: 'MARSH' },
+        { hindi: 'पठार', english: 'PLATEAU' },
+        { hindi: 'कटक', english: 'RIDGE' },
+        { hindi: 'महाखड्ड', english: 'CANYON' },
+        { hindi: 'झरना', english: 'WATERFALL' },
+      ]
+    },
+    {
+      level: 47,
+      pairs: [
+        { hindi: 'जादूगर', english: 'WIZARD' },
+        { hindi: 'बौना', english: 'GNOME' },
+        { hindi: 'दैत्य', english: 'GIANT' },
+        { hindi: 'दानव', english: 'GOBLIN' },
+        { hindi: 'योद्धा नायक', english: 'HERO' },
+        { hindi: 'खोज यात्रा', english: 'QUEST' },
+        { hindi: 'ताबीज', english: 'TALISMAN' },
+        { hindi: 'पौराणिक', english: 'MYTHIC' },
+        { hindi: 'अवशेष', english: 'RELIC' },
+        { hindi: 'मंत्र', english: 'SPELL' },
+      ]
+    },
+    {
+      level: 48,
+      pairs: [
+        { hindi: 'प्लैटिनम', english: 'PLATINUM' },
+        { hindi: 'टाइटेनियम', english: 'TITANIUM' },
+        { hindi: 'जस्ता', english: 'ZINC' },
+        { hindi: 'निकेल', english: 'NICKEL' },
+        { hindi: 'कोबाल्ट', english: 'COBALT' },
+        { hindi: 'सीसा', english: 'LEAD' },
+        { hindi: 'इस्पात', english: 'STEEL' },
+        { hindi: 'नीलम', english: 'SAPPHIRE' },
+        { hindi: 'पुखराज', english: 'TOPAZ' },
+        { hindi: 'गोमेद', english: 'OPAL' },
+      ]
+    },
+    {
+      level: 49,
+      pairs: [
+        { hindi: 'कुलीन', english: 'NOBLE' },
+        { hindi: 'ईमानदार', english: 'HONEST' },
+        { hindi: 'निष्ठावान', english: 'LOYAL' },
+        { hindi: 'विनम्र', english: 'HUMBLE' },
+        { hindi: 'दयालु', english: 'KIND' },
+        { hindi: 'धैर्यवान', english: 'PATIENT' },
+        { hindi: 'एकाग्रता', english: 'FOCUS' },
+        { hindi: 'शूरता', english: 'VALOR' },
+        { hindi: 'साहसिकता', english: 'COURAGE' },
+        { hindi: 'सदाचार', english: 'VIRTUE' },
+      ]
+    },
+    {
+      level: 50,
+      pairs: [
+        { hindi: 'विजय', english: 'VICTORY' },
+        { hindi: 'जयघोष', english: 'TRIUMPH' },
+        { hindi: 'शीर्ष', english: 'SUMMIT' },
+        { hindi: 'नियति', english: 'DESTINY' },
+        { hindi: 'आख्यान', english: 'LEGEND' },
+        { hindi: 'सर्वोच्च', english: 'APEX' },
+        { hindi: 'विशिष्ट', english: 'ELITE' },
+        { hindi: 'प्रधान', english: 'PRIME' },
+        { hindi: 'भव्य', english: 'GRAND' },
+        { hindi: 'वीरतापूर्ण', english: 'HEROIC' },
+      ]
+    },
   ],
 
-  // ── Hindi Mode: 30 Levels, 10 words each (300 unique words) ──
+  // ── Hindi Mode: 50 Levels, 10 words each (500 unique words) ──
   hindi: [
     { level: 1,  words: ['पानी', 'किताब', 'घर', 'सूरज', 'पेड़', 'फूल', 'नदी', 'बादल', 'रात', 'हवा'] },
     { level: 2,  words: ['बिल्ली', 'कुत्ता', 'मछली', 'चिड़िया', 'शेर', 'हाथी', 'घोड़ा', 'मोर', 'बंदर', 'भालू'] },
@@ -528,6 +848,26 @@ const WORD_DATA = {
     { level: 28, words: ['सफर', 'मार्ग', 'मंजिल', 'राही', 'दिशा', 'नाविक', 'पड़ाव', 'शिखर', 'सड़क', 'मोड़'] },
     { level: 29, words: ['विजय', 'वीर', 'शौर्य', 'पराक्रम', 'गरिमा', 'सम्मान', 'कीर्ति', 'यश', 'तेज', 'बल'] },
     { level: 30, words: ['अमृत', 'ज्ञान', 'विद्या', 'सुख', 'सौभाग्य', 'उजाला', 'संसार', 'सृष्टि', 'जीवन', 'मंगल'] },
+    { level: 31, words: ['तोता', 'कोयल', 'चील', 'बाज', 'उल्लू', 'कौवा', 'कबूतर', 'मैना', 'बत्तख', 'तीतर'] },
+    { level: 32, words: ['तितली', 'चींटी', 'भौंरा', 'मकड़ी', 'टिड्डा', 'जुगनू', 'मच्छर', 'पतंगा', 'दीमक', 'मधुमक्खी'] },
+    { level: 33, words: ['हल्दी', 'मिर्च', 'जीरा', 'धनिया', 'लौंग', 'इलायची', 'सौंफ', 'मेथी', 'हींग', 'तेजपत्ता'] },
+    { level: 34, words: ['लड्डू', 'पेड़ा', 'जलेबी', 'बर्फी', 'रसगुल्ला', 'हलवा', 'समोसा', 'कचौड़ी', 'पापड़', 'पूरी'] },
+    { level: 35, words: ['साड़ी', 'कुर्ता', 'धोती', 'पगड़ी', 'शॉल', 'पाजेब', 'कंगन', 'झुमका', 'अंगूठी', 'माला'] },
+    { level: 36, words: ['पुदीना', 'गिलोय', 'ब्राह्मी', 'आंवला', 'हरड़', 'बहेड़ा', 'जामुन', 'बेल', 'गुड़हल', 'अजवाइन'] },
+    { level: 37, words: ['दर्रा', 'खाड़ी', 'टापू', 'वन', 'चोटी', 'हिमनद', 'चरागाह', 'दलदल', 'तट', 'प्रपात'] },
+    { level: 38, words: ['ममता', 'करुणा', 'क्षमा', 'विनय', 'सरलता', 'निष्ठा', 'समर्पण', 'विवेक', 'संतोष', 'सद्भाव'] },
+    { level: 39, words: ['समीर', 'बयार', 'ओला', 'घटा', 'फुहार', 'पावस', 'शरद', 'शिशिर', 'हेमंत', 'पवन'] },
+    { level: 40, words: ['हथौड़ा', 'पेंचकस', 'कुल्हाड़ी', 'आरी', 'कैंची', 'तराजू', 'सुई', 'धागा', 'कील', 'रंदा'] },
+    { level: 41, words: ['गला', 'पेट', 'कंधा', 'उंगली', 'घुटना', 'गर्दन', 'जीभ', 'होंठ', 'गाल', 'माथा'] },
+    { level: 42, words: ['गुरु', 'शिष्य', 'पड़ोसी', 'मेहमान', 'बालक', 'बालिका', 'सहेली', 'बंधु', 'कुटुंब', 'साथी'] },
+    { level: 43, words: ['अंतरिक्ष', 'प्रभात', 'निशा', 'तिमिर', 'किरण', 'ज्योति', 'क्षितिज', 'अनंत', 'वितान', 'नीहारिका'] },
+    { level: 44, words: ['इस्पात', 'जस्ता', 'रांगा', 'गंधक', 'कोयला', 'संगमरमर', 'अभ्रक', 'स्फटिक', 'ग्रेनाइट', 'चूना'] },
+    { level: 45, words: ['चीता', 'तेंदुआ', 'भेड़िया', 'लोमड़ी', 'लकड़बग्घा', 'बारहसिंगा', 'नीलगाय', 'जंगली', 'लंगूर', 'सांभर'] },
+    { level: 46, words: ['पुस्तक', 'ग्रंथ', 'निबंध', 'पद', 'छंद', 'अलंकार', 'मुहावरा', 'भाषा', 'व्याकरण', 'शब्द'] },
+    { level: 47, words: ['ग्राम', 'चौपाल', 'कुआं', 'बावड़ी', 'आश्रम', 'देवालय', 'बाजार', 'फाटक', 'मीनार', 'चौराहा'] },
+    { level: 48, words: ['दीवाली', 'होली', 'रक्षाबंधन', 'दशहरा', 'पोंगल', 'ओणम', 'बैसाखी', 'छठ', 'लोहड़ी', 'संक्रांति'] },
+    { level: 49, words: ['मूर्तिकला', 'चित्रकला', 'वास्तुकला', 'बुनाई', 'कढ़ाई', 'कुंभकला', 'अभिनय', 'गायन', 'वादन', 'नाट्य'] },
+    { level: 50, words: ['स्वाभिमान', 'राष्ट्र', 'ध्वज', 'तिरंगा', 'स्वतंत्रता', 'बलिदान', 'अमर', 'प्रेरणा', 'उत्कर्ष', 'वैभव'] },
   ],
 
   // ── Grid configuration per level range ─────────────────────

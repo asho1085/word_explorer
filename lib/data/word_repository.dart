@@ -1,9 +1,11 @@
+import 'package:characters/characters.dart';
+
 import '../models/game_models.dart';
 
 class WordRepository {
-  static const int totalLevels = 30;
+  static const int totalLevels = 50;
 
-  // ── English Mode: 30 levels, 10 words each (300 100% unique words) ──
+  // ── English Mode: 50 levels, 10 words each (500 100% unique words) ──
   static const Map<int, List<String>> englishLevels = {
     1: ['CAT', 'DOG', 'BIRD', 'FISH', 'FROG', 'DUCK', 'DEER', 'BEAR', 'WOLF', 'LION'],
     2: ['BED', 'DOOR', 'LAMP', 'DESK', 'CHAIR', 'TABLE', 'CLOCK', 'SOFA', 'SHELF', 'RUG'],
@@ -35,9 +37,29 @@ class WordRepository {
     28: ['COLD', 'CHILL', 'SLEET', 'HAIL', 'GLACIER', 'ICEBERG', 'ARCTIC', 'TUNDRA', 'POLAR', 'BLIZZARD'],
     29: ['CROWN', 'SCEPTER', 'REALM', 'PRINCE', 'BARON', 'DUCHESS', 'DYNASTY', 'EMPIRE', 'PALACE', 'REGAL'],
     30: ['AURA', 'STELLAR', 'ZENITH', 'ETERNAL', 'RADIANT', 'INFINITY', 'ECLIPSE', 'HORIZON', 'CRYSTAL', 'DIVINE'],
+    31: ['EAGLE', 'HAWK', 'FALCON', 'SWAN', 'HERON', 'RAVEN', 'OWL', 'PARROT', 'DOVE', 'ROBIN'],
+    32: ['BEE', 'WASP', 'ANT', 'BEETLE', 'MOTH', 'CRICKET', 'SPIDER', 'MANTIS', 'CICADA', 'HORNET'],
+    33: ['OAK', 'MAPLE', 'WILLOW', 'BAMBOO', 'PALM', 'BONSAI', 'IVY', 'CLOVER', 'VINE', 'ORCHID'],
+    34: ['CHEF', 'RECIPE', 'ROAST', 'GRILL', 'TOAST', 'BAKE', 'BOIL', 'SAUCE', 'SALAD', 'SOUP'],
+    35: ['CHERRY', 'PAPAYA', 'GUAVA', 'FIG', 'DATE', 'OLIVE', 'CARROT', 'ONION', 'RADISH', 'GARLIC'],
+    36: ['TRAIN', 'TRUCK', 'BOAT', 'YACHT', 'TRAM', 'METRO', 'CANOE', 'KAYAK', 'FERRY', 'GLIDER'],
+    37: ['BREEZE', 'MIST', 'FOG', 'THUNDER', 'GALE', 'HUMID', 'CLIMATE', 'DEW', 'VAPOR', 'TYPHOON'],
+    38: ['NOVEL', 'POEM', 'DRAMA', 'STAGE', 'ACTOR', 'CANVAS', 'ESSAY', 'VERSE', 'PROSE', 'THEATER'],
+    39: ['ATOM', 'CELL', 'ENERGY', 'FORCE', 'MASS', 'ACID', 'OPTICS', 'LASER', 'PLASMA', 'MAGNET'],
+    40: ['REEF', 'TRENCH', 'SPONGE', 'KELP', 'ANEMONE', 'LOBSTER', 'CLAM', 'OYSTER', 'SHRIMP', 'URCHIN'],
+    41: ['HEART', 'LUNG', 'BRAIN', 'BONE', 'MUSCLE', 'SPINE', 'BLOOD', 'NERVE', 'JOINT', 'TISSUE'],
+    42: ['JAZZ', 'BLUES', 'OPERA', 'BALLET', 'WALTZ', 'TANGO', 'TEMPO', 'RHYTHM', 'VIOLIN', 'GUITAR'],
+    43: ['PULSAR', 'QUASAR', 'COSMIC', 'ASTEROID', 'GRAVITY', 'HUBBLE', 'TITAN', 'PROBE', 'AURORA', 'NEUTRINO'],
+    44: ['TIGER', 'LEOPARD', 'CHEETAH', 'JAGUAR', 'HYENA', 'PANDA', 'ZEBRA', 'GIRAFFE', 'MONKEY', 'RHINO'],
+    45: ['ARCH', 'PILLAR', 'DOME', 'VAULT', 'ARENA', 'TEMPLE', 'SHRINE', 'PLAZA', 'CABIN', 'VILLA'],
+    46: ['CLIFF', 'GORGE', 'CRATER', 'MEADOW', 'PLAINS', 'SWAMP', 'MARSH', 'PLATEAU', 'RIDGE', 'PEAK'],
+    47: ['WIZARD', 'ELF', 'GOBLIN', 'GIANT', 'HERO', 'QUEST', 'TALISMAN', 'MYTHIC', 'RELIC', 'SWORD'],
+    48: ['PLATINUM', 'TITANIUM', 'ZINC', 'NICKEL', 'COBALT', 'LEAD', 'IRON', 'STEEL', 'EMERALD', 'SAPPHIRE'],
+    49: ['NOBLE', 'HONEST', 'LOYAL', 'HUMBLE', 'KIND', 'PATIENT', 'FOCUS', 'GRACE', 'VALOR', 'COURAGE'],
+    50: ['VICTORY', 'TRIUMPH', 'SUMMIT', 'DESTINY', 'LEGEND', 'APEX', 'ELITE', 'PRIME', 'GRAND', 'HEROIC'],
   };
 
-  // ── Hindi Mode: 30 levels, 10 words each (300 100% unique words) ──
+  // ── Hindi Mode: 50 levels, 10 words each (500 100% unique words) ──
   static const Map<int, List<String>> hindiLevels = {
     1: ['पानी', 'किताब', 'घर', 'सूरज', 'पेड़', 'फूल', 'नदी', 'बादल', 'रात', 'हवा'],
     2: ['बिल्ली', 'कुत्ता', 'मछली', 'चिड़िया', 'शेर', 'हाथी', 'घोड़ा', 'मोर', 'बंदर', 'भालू'],
@@ -69,9 +91,29 @@ class WordRepository {
     28: ['सफर', 'मार्ग', 'मंजिल', 'राही', 'दिशा', 'नाविक', 'पड़ाव', 'शिखर', 'सड़क', 'मोड़'],
     29: ['विजय', 'वीर', 'शौर्य', 'पराक्रम', 'गरिमा', 'सम्मान', 'कीर्ति', 'यश', 'तेज', 'बल'],
     30: ['अमृत', 'ज्ञान', 'विद्या', 'सुख', 'सौभाग्य', 'उजाला', 'संसार', 'सृष्टि', 'जीवन', 'मंगल'],
+    31: ['तोता', 'कोयल', 'चील', 'बाज', 'उल्लू', 'कौवा', 'कबूतर', 'मैना', 'बत्तख', 'तीतर'],
+    32: ['तितली', 'चींटी', 'भौंरा', 'मकड़ी', 'टिड्डा', 'जुगनू', 'मच्छर', 'पतंगा', 'दीमक', 'मधुमक्खी'],
+    33: ['हल्दी', 'मिर्च', 'जीरा', 'धनिया', 'लौंग', 'इलायची', 'सौंफ', 'मेथी', 'हींग', 'तेजपत्ता'],
+    34: ['लड्डू', 'पेड़ा', 'जलेबी', 'बर्फी', 'रसगुल्ला', 'हलवा', 'समोसा', 'कचौड़ी', 'पापड़', 'पूरी'],
+    35: ['साड़ी', 'कुर्ता', 'धोती', 'पगड़ी', 'शॉल', 'पाजेब', 'कंगन', 'झुमका', 'अंगूठी', 'माला'],
+    36: ['पुदीना', 'गिलोय', 'ब्राह्मी', 'आंवला', 'हरड़', 'बहेड़ा', 'जामुन', 'बेल', 'गुड़हल', 'अजवाइन'],
+    37: ['दर्रा', 'खाड़ी', 'टापू', 'वन', 'चोटी', 'हिमनद', 'चरागाह', 'दलदल', 'तट', 'प्रपात'],
+    38: ['ममता', 'करुणा', 'क्षमा', 'विनय', 'सरलता', 'निष्ठा', 'समर्पण', 'विवेक', 'संतोष', 'सद्भाव'],
+    39: ['समीर', 'बयार', 'ओला', 'घटा', 'फुहार', 'पावस', 'शरद', 'शिशिर', 'हेमंत', 'पवन'],
+    40: ['हथौड़ा', 'पेंचकस', 'कुल्हाड़ी', 'आरी', 'कैंची', 'तराजू', 'सुई', 'धागा', 'कील', 'रंदा'],
+    41: ['गला', 'पेट', 'कंधा', 'उंगली', 'घुटना', 'गर्दन', 'जीभ', 'होंठ', 'गाल', 'माथा'],
+    42: ['गुरु', 'शिष्य', 'पड़ोसी', 'मेहमान', 'बालक', 'बालिका', 'सहेली', 'बंधु', 'कुटुंब', 'साथी'],
+    43: ['अंतरिक्ष', 'प्रभात', 'निशा', 'तिमिर', 'किरण', 'ज्योति', 'क्षितिज', 'अनंत', 'वितान', 'नीहारिका'],
+    44: ['इस्पात', 'जस्ता', 'रांगा', 'गंधक', 'कोयला', 'संगमरमर', 'अभ्रक', 'स्फटिक', 'ग्रेनाइट', 'चूना'],
+    45: ['चीता', 'तेंदुआ', 'भेड़िया', 'लोमड़ी', 'लकड़बग्घा', 'बारहसिंगा', 'नीलगाय', 'जंगली', 'लंगूर', 'सांभर'],
+    46: ['पुस्तक', 'ग्रंथ', 'निबंध', 'पद', 'छंद', 'अलंकार', 'मुहावरा', 'भाषा', 'व्याकरण', 'शब्द'],
+    47: ['ग्राम', 'चौपाल', 'कुआं', 'बावड़ी', 'आश्रम', 'देवालय', 'बाजार', 'फाटक', 'मीनार', 'चौराहा'],
+    48: ['दीवाली', 'होली', 'रक्षाबंधन', 'दशहरा', 'पोंगल', 'ओणम', 'बैसाखी', 'छठ', 'लोहड़ी', 'संक्रांति'],
+    49: ['मूर्तिकला', 'चित्रकला', 'वास्तुकला', 'बुनाई', 'कढ़ाई', 'कुंभकला', 'अभिनय', 'गायन', 'वादन', 'नाट्य'],
+    50: ['स्वाभिमान', 'राष्ट्र', 'ध्वज', 'तिरंगा', 'स्वतंत्रता', 'बलिदान', 'अमर', 'प्रेरणा', 'उत्कर्ष', 'वैभव'],
   };
 
-  // ── Master Mode: 30 levels, 10 pairs each (300 100% unique pairs) ──
+  // ── Master Mode: 50 levels, 10 pairs each (500 100% unique pairs) ──
   static const Map<int, List<Map<String, String>>> masterLevels = {
     1: [
       {'hindi': 'पानी', 'english': 'WATER'},
@@ -433,27 +475,304 @@ class WordRepository {
       {'hindi': 'प्रपात', 'english': 'FALLS'},
       {'hindi': 'शिखर', 'english': 'PEAK'},
     ],
+    31: [
+      {'hindi': 'हंस', 'english': 'SWAN'},
+      {'hindi': 'चील', 'english': 'EAGLE'},
+      {'hindi': 'उल्लू', 'english': 'OWL'},
+      {'hindi': 'तोता', 'english': 'PARROT'},
+      {'hindi': 'मधुमक्खी', 'english': 'BEE'},
+      {'hindi': 'चींटी', 'english': 'ANT'},
+      {'hindi': 'पतंग', 'english': 'MOTH'},
+      {'hindi': 'मकड़ी', 'english': 'SPIDER'},
+      {'hindi': 'बत्तख', 'english': 'DUCK'},
+      {'hindi': 'कौवा', 'english': 'CROW'},
+    ],
+    32: [
+      {'hindi': 'वटवृक्ष', 'english': 'BANYAN'},
+      {'hindi': 'ताड़', 'english': 'PALM'},
+      {'hindi': 'बांस', 'english': 'BAMBOO'},
+      {'hindi': 'बांज', 'english': 'OAK'},
+      {'hindi': 'कचनार', 'english': 'ORCHID'},
+      {'hindi': 'लता', 'english': 'VINE'},
+      {'hindi': 'चिनार', 'english': 'MAPLE'},
+      {'hindi': 'कमल', 'english': 'LOTUS'},
+      {'hindi': 'तुलसी', 'english': 'BASIL'},
+      {'hindi': 'चमेली', 'english': 'JASMINE'},
+    ],
+    33: [
+      {'hindi': 'व्हेल', 'english': 'WHALE'},
+      {'hindi': 'शार्क', 'english': 'SHARK'},
+      {'hindi': 'केकड़ा', 'english': 'CRAB'},
+      {'hindi': 'कछुआ', 'english': 'TURTLE'},
+      {'hindi': 'झींगा', 'english': 'SHRIMP'},
+      {'hindi': 'डॉल्फ़िन', 'english': 'DOLPHIN'},
+      {'hindi': 'सीप', 'english': 'OYSTER'},
+      {'hindi': 'मूंगा', 'english': 'CORAL'},
+      {'hindi': 'प्रवाल', 'english': 'REEF'},
+      {'hindi': 'शैवाल', 'english': 'KELP'},
+    ],
+    34: [
+      {'hindi': 'गाजर', 'english': 'CARROT'},
+      {'hindi': 'प्याज', 'english': 'ONION'},
+      {'hindi': 'लहसुन', 'english': 'GARLIC'},
+      {'hindi': 'अदरक', 'english': 'GINGER'},
+      {'hindi': 'हल्दी', 'english': 'TURMERIC'},
+      {'hindi': 'मिर्च', 'english': 'CHILI'},
+      {'hindi': 'लौंग', 'english': 'CLOVE'},
+      {'hindi': 'जीरा', 'english': 'CUMIN'},
+      {'hindi': 'पुदीना', 'english': 'MINT'},
+      {'hindi': 'पालक', 'english': 'SPINACH'},
+    ],
+    35: [
+      {'hindi': 'रसोइया', 'english': 'COOK'},
+      {'hindi': 'तंदूर', 'english': 'OVEN'},
+      {'hindi': 'प्याला', 'english': 'MUG'},
+      {'hindi': 'चिमटा', 'english': 'TONGS'},
+      {'hindi': 'बेलन', 'english': 'ROLLER'},
+      {'hindi': 'ढक्कन', 'english': 'LID'},
+      {'hindi': 'मथानी', 'english': 'WHISK'},
+      {'hindi': 'छलनी', 'english': 'SIEVE'},
+      {'hindi': 'भट्टी', 'english': 'KILN'},
+      {'hindi': 'व्यंजन', 'english': 'RECIPE'},
+    ],
+    36: [
+      {'hindi': 'मेट्रो', 'english': 'METRO'},
+      {'hindi': 'ग्लाइडर', 'english': 'GLIDER'},
+      {'hindi': 'नौकायन', 'english': 'YACHT'},
+      {'hindi': 'बजरा', 'english': 'BARGE'},
+      {'hindi': 'डोंगी', 'english': 'CANOE'},
+      {'hindi': 'कयाक', 'english': 'KAYAK'},
+      {'hindi': 'फेरी', 'english': 'FERRY'},
+      {'hindi': 'ट्राम', 'english': 'TRAM'},
+      {'hindi': 'स्कूटर', 'english': 'SCOOTER'},
+      {'hindi': 'पनडुब्बी', 'english': 'SUB'},
+    ],
+    37: [
+      {'hindi': 'समीर', 'english': 'BREEZE'},
+      {'hindi': 'कोहरा', 'english': 'FOG'},
+      {'hindi': 'धुंध', 'english': 'MIST'},
+      {'hindi': 'ओस', 'english': 'DEW'},
+      {'hindi': 'गर्जन', 'english': 'THUNDER'},
+      {'hindi': 'आंधी', 'english': 'GALE'},
+      {'hindi': 'वाष्प', 'english': 'VAPOR'},
+      {'hindi': 'बवंडर', 'english': 'TORNADO'},
+      {'hindi': 'ओला', 'english': 'HAIL'},
+      {'hindi': 'पाला', 'english': 'FROST'},
+    ],
+    38: [
+      {'hindi': 'हथौड़ा', 'english': 'HAMMER'},
+      {'hindi': 'आरी', 'english': 'SAW'},
+      {'hindi': 'कैंची', 'english': 'SHEARS'},
+      {'hindi': 'पेंचकस', 'english': 'SCREW'},
+      {'hindi': 'कुल्हाड़ी', 'english': 'AXE'},
+      {'hindi': 'तराजू', 'english': 'SCALE'},
+      {'hindi': 'सुई', 'english': 'NEEDLE'},
+      {'hindi': 'धागा', 'english': 'THREAD'},
+      {'hindi': 'कील', 'english': 'NAIL'},
+      {'hindi': 'संड़ासी', 'english': 'PLIERS'},
+    ],
+    39: [
+      {'hindi': 'यकृत', 'english': 'LIVER'},
+      {'hindi': 'फेफड़ा', 'english': 'LUNG'},
+      {'hindi': 'मस्तिष्क', 'english': 'BRAIN'},
+      {'hindi': 'अस्थि', 'english': 'BONE'},
+      {'hindi': 'पेशी', 'english': 'MUSCLE'},
+      {'hindi': 'मेरुदंड', 'english': 'SPINE'},
+      {'hindi': 'रुधिर', 'english': 'BLOOD'},
+      {'hindi': 'धमनी', 'english': 'ARTERY'},
+      {'hindi': 'शिरा', 'english': 'VEIN'},
+      {'hindi': 'त्वचा', 'english': 'SKIN'},
+    ],
+    40: [
+      {'hindi': 'कुर्ता', 'english': 'TUNIC'},
+      {'hindi': 'पगड़ी', 'english': 'TURBAN'},
+      {'hindi': 'शॉल', 'english': 'SHAWL'},
+      {'hindi': 'मोजा', 'english': 'SOCK'},
+      {'hindi': 'दस्ताना', 'english': 'GLOVE'},
+      {'hindi': 'पाजामा', 'english': 'PANTS'},
+      {'hindi': 'केंचुल', 'english': 'VEST'},
+      {'hindi': 'घाघरा', 'english': 'SKIRT'},
+      {'hindi': 'जामा', 'english': 'ROBE'},
+      {'hindi': 'चादर', 'english': 'SHEET'},
+    ],
+    41: [
+      {'hindi': 'परमाणु', 'english': 'ATOM'},
+      {'hindi': 'कोशिका', 'english': 'CELL'},
+      {'hindi': 'ऊर्जा', 'english': 'ENERGY'},
+      {'hindi': 'बल', 'english': 'FORCE'},
+      {'hindi': 'द्रव्यमान', 'english': 'MASS'},
+      {'hindi': 'अम्ल', 'english': 'ACID'},
+      {'hindi': 'चुंबक', 'english': 'MAGNET'},
+      {'hindi': 'प्रकाशिकी', 'english': 'OPTICS'},
+      {'hindi': 'किरणपुंज', 'english': 'LASER'},
+      {'hindi': 'कण', 'english': 'PARTICLE'},
+    ],
+    42: [
+      {'hindi': 'वायलिन', 'english': 'VIOLIN'},
+      {'hindi': 'गिटार', 'english': 'GUITAR'},
+      {'hindi': 'पियानो', 'english': 'PIANO'},
+      {'hindi': 'लय', 'english': 'TEMPO'},
+      {'hindi': 'स्वरसंगति', 'english': 'CHORD'},
+      {'hindi': 'गायन', 'english': 'VOCAL'},
+      {'hindi': 'मधुरिमा', 'english': 'MELODY'},
+      {'hindi': 'नृत्यनाट्य', 'english': 'BALLET'},
+      {'hindi': 'गीतिनाट्य', 'english': 'OPERA'},
+      {'hindi': 'जैज', 'english': 'JAZZ'},
+    ],
+    43: [
+      {'hindi': 'क्षुद्रग्रह', 'english': 'ASTEROID'},
+      {'hindi': 'क्रेटर', 'english': 'CRATER'},
+      {'hindi': 'गुरुत्वाकर्षण', 'english': 'GRAVITY'},
+      {'hindi': 'पल्सर', 'english': 'PULSAR'},
+      {'hindi': 'क्वासर', 'english': 'QUASAR'},
+      {'hindi': 'टाइटन', 'english': 'TITAN'},
+      {'hindi': 'रोवर', 'english': 'ROVER'},
+      {'hindi': 'अन्वेषक', 'english': 'PROBE'},
+      {'hindi': 'ज्वाला', 'english': 'FLARE'},
+      {'hindi': 'ब्रह्मांडीय', 'english': 'COSMIC'},
+    ],
+    44: [
+      {'hindi': 'तेंदुआ', 'english': 'LEOPARD'},
+      {'hindi': 'चीता', 'english': 'CHEETAH'},
+      {'hindi': 'जगुआर', 'english': 'JAGUAR'},
+      {'hindi': 'लकड़बग्घा', 'english': 'HYENA'},
+      {'hindi': 'पांडा', 'english': 'PANDA'},
+      {'hindi': 'ज़ेबरा', 'english': 'ZEBRA'},
+      {'hindi': 'जिराफ़', 'english': 'GIRAFFE'},
+      {'hindi': 'गैंडा', 'english': 'RHINO'},
+      {'hindi': 'ऊदबिलाव', 'english': 'OTTER'},
+      {'hindi': 'वालरस', 'english': 'WALRUS'},
+    ],
+    45: [
+      {'hindi': 'मेहराब', 'english': 'ARCH'},
+      {'hindi': 'स्तंभ', 'english': 'PILLAR'},
+      {'hindi': 'गुंबद', 'english': 'DOME'},
+      {'hindi': 'तिजोरी', 'english': 'VAULT'},
+      {'hindi': 'अखाड़ा', 'english': 'ARENA'},
+      {'hindi': 'मंदिर', 'english': 'TEMPLE'},
+      {'hindi': 'दरगाह', 'english': 'SHRINE'},
+      {'hindi': 'चौक', 'english': 'PLAZA'},
+      {'hindi': 'कुटिया', 'english': 'CABIN'},
+      {'hindi': 'कोठी', 'english': 'VILLA'},
+    ],
+    46: [
+      {'hindi': 'चट्टान', 'english': 'CLIFF'},
+      {'hindi': 'खड्ड', 'english': 'GORGE'},
+      {'hindi': 'चारागाह', 'english': 'MEADOW'},
+      {'hindi': 'मैदानी भाग', 'english': 'PLAINS'},
+      {'hindi': 'कच्छ', 'english': 'SWAMP'},
+      {'hindi': 'दलदल', 'english': 'MARSH'},
+      {'hindi': 'पठार', 'english': 'PLATEAU'},
+      {'hindi': 'कटक', 'english': 'RIDGE'},
+      {'hindi': 'महाखड्ड', 'english': 'CANYON'},
+      {'hindi': 'झरना', 'english': 'WATERFALL'},
+    ],
+    47: [
+      {'hindi': 'जादूगर', 'english': 'WIZARD'},
+      {'hindi': 'बौना', 'english': 'GNOME'},
+      {'hindi': 'दैत्य', 'english': 'GIANT'},
+      {'hindi': 'दानव', 'english': 'GOBLIN'},
+      {'hindi': 'योद्धा नायक', 'english': 'HERO'},
+      {'hindi': 'खोज यात्रा', 'english': 'QUEST'},
+      {'hindi': 'ताबीज', 'english': 'TALISMAN'},
+      {'hindi': 'पौराणिक', 'english': 'MYTHIC'},
+      {'hindi': 'अवशेष', 'english': 'RELIC'},
+      {'hindi': 'मंत्र', 'english': 'SPELL'},
+    ],
+    48: [
+      {'hindi': 'प्लैटिनम', 'english': 'PLATINUM'},
+      {'hindi': 'टाइटेनियम', 'english': 'TITANIUM'},
+      {'hindi': 'जस्ता', 'english': 'ZINC'},
+      {'hindi': 'निकेल', 'english': 'NICKEL'},
+      {'hindi': 'कोबाल्ट', 'english': 'COBALT'},
+      {'hindi': 'सीसा', 'english': 'LEAD'},
+      {'hindi': 'इस्पात', 'english': 'STEEL'},
+      {'hindi': 'नीलम', 'english': 'SAPPHIRE'},
+      {'hindi': 'पुखराज', 'english': 'TOPAZ'},
+      {'hindi': 'गोमेद', 'english': 'OPAL'},
+    ],
+    49: [
+      {'hindi': 'कुलीन', 'english': 'NOBLE'},
+      {'hindi': 'ईमानदार', 'english': 'HONEST'},
+      {'hindi': 'निष्ठावान', 'english': 'LOYAL'},
+      {'hindi': 'विनम्र', 'english': 'HUMBLE'},
+      {'hindi': 'दयालु', 'english': 'KIND'},
+      {'hindi': 'धैर्यवान', 'english': 'PATIENT'},
+      {'hindi': 'एकाग्रता', 'english': 'FOCUS'},
+      {'hindi': 'शूरता', 'english': 'VALOR'},
+      {'hindi': 'साहसिकता', 'english': 'COURAGE'},
+      {'hindi': 'सदाचार', 'english': 'VIRTUE'},
+    ],
+    50: [
+      {'hindi': 'विजय', 'english': 'VICTORY'},
+      {'hindi': 'जयघोष', 'english': 'TRIUMPH'},
+      {'hindi': 'शीर्ष', 'english': 'SUMMIT'},
+      {'hindi': 'नियति', 'english': 'DESTINY'},
+      {'hindi': 'आख्यान', 'english': 'LEGEND'},
+      {'hindi': 'सर्वोच्च', 'english': 'APEX'},
+      {'hindi': 'विशिष्ट', 'english': 'ELITE'},
+      {'hindi': 'प्रधान', 'english': 'PRIME'},
+      {'hindi': 'भव्य', 'english': 'GRAND'},
+      {'hindi': 'वीरतापूर्ण', 'english': 'HEROIC'},
+    ],
   };
 
-  static int getGridDimension(int level) {
-    if (level <= 10) return 9;
-    return 10;
+  static int getGridDimension(int level) => 8;
+
+  static int _wordCells(String word) => word.characters.length;
+
+  /// Deterministically trims a level's word list until every word fits an
+  /// 8x8 board: drop words longer than 8 cells, then drop the longest words
+  /// (earlier index as tiebreak) until the total fits 56 cells, always
+  /// keeping at least 6 words. Original list order is preserved.
+  static List<String> _selectFittingWords(List<String> words) {
+    const maxCells = 56;
+    final indexed =
+        List<(int, String)>.generate(words.length, (i) => (i, words[i]));
+
+    int byLongestFirst((int, String) a, (int, String) b) {
+      final byCells = _wordCells(b.$2).compareTo(_wordCells(a.$2));
+      return byCells != 0 ? byCells : a.$1.compareTo(b.$1);
+    }
+
+    indexed.sort(byLongestFirst);
+
+    final kept = <(int, String)>[];
+    var total = 0;
+    for (final entry in indexed) {
+      if (_wordCells(entry.$2) > 8) continue;
+      if (total + _wordCells(entry.$2) > maxCells) continue;
+      kept.add(entry);
+      total += _wordCells(entry.$2);
+    }
+
+    for (final entry in indexed) {
+      if (kept.length >= 6) break;
+      if (kept.any((k) => k.$1 == entry.$1)) continue;
+      if (_wordCells(entry.$2) > 8) continue;
+      kept.add(entry);
+    }
+
+    kept.sort((a, b) => a.$1.compareTo(b.$1));
+    return kept.map((e) => e.$2).toList();
   }
 
   static List<String> getGridWords(String mode, int level) {
     if (mode == 'master') {
       final pairs = masterLevels[level] ?? masterLevels[1]!;
-      return pairs.map((p) => p['english']!).toList();
+      return _selectFittingWords(pairs.map((p) => p['english']!).toList());
     } else if (mode == 'hindi') {
-      return hindiLevels[level] ?? hindiLevels[1]!;
+      return _selectFittingWords(hindiLevels[level] ?? hindiLevels[1]!);
     } else {
-      return englishLevels[level] ?? englishLevels[1]!;
+      return _selectFittingWords(englishLevels[level] ?? englishLevels[1]!);
     }
   }
 
   static List<ClueItem> getClues(String mode, int level) {
     if (mode == 'master') {
-      final pairs = masterLevels[level] ?? masterLevels[1]!;
+      final selected = getGridWords('master', level);
+      final pairs = (masterLevels[level] ?? masterLevels[1]!)
+          .where((p) => selected.contains(p['english']));
       return pairs
           .map((p) => ClueItem(
                 display: p['hindi']!,
@@ -462,7 +781,7 @@ class WordRepository {
               ))
           .toList();
     } else if (mode == 'hindi') {
-      final words = hindiLevels[level] ?? hindiLevels[1]!;
+      final words = getGridWords('hindi', level);
       return words
           .map((w) => ClueItem(
                 display: w,
@@ -471,7 +790,7 @@ class WordRepository {
               ))
           .toList();
     } else {
-      final words = englishLevels[level] ?? englishLevels[1]!;
+      final words = getGridWords('english', level);
       return words
           .map((w) => ClueItem(
                 display: w,

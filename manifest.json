@@ -1,7 +1,7 @@
 {
-  "name": "Word Search Explorer",
-  "short_name": "Word Search",
-  "description": "Premium word search game with English, Hindi, and Master modes",
+  "name": "Shabdkhoj: Word Search Puzzle",
+  "short_name": "Shabdkhoj",
+  "description": "Shabdkhoj: Word Search Puzzle - bilingual English/Hindi word search puzzle game",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "portrait",

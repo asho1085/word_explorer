@@ -3,14 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="Word Search Explorer — A premium word puzzle game with English, Hindi, and Master modes">
+  <meta name="description" content="Shabdkhoj: Word Search Puzzle — A premium word puzzle game with English, Hindi, and Duo modes">
   <meta name="theme-color" content="#0a1628">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Word Search Explorer</title>
+  <title>Shabdkhoj: Word Search Puzzle</title>
 
   <!-- Dexie.js — IndexedDB wrapper (mobile database) -->
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+
+  <!-- Firebase Web SDK (Compat mode for simple zero-build integration) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
   <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
@@ -21,6 +26,118 @@
 <body>
 
 <div id="app">
+
+  <!-- ════════════════════════════════════════════════════════
+       SCREEN 0: AUTHENTICATION / LOGIN
+       ════════════════════════════════════════════════════════ -->
+  <div id="auth-screen" class="screen auth-screen">
+    <!-- Nature leaf decorations -->
+    <div class="leaf-decoration top-left"></div>
+    <div class="leaf-decoration top-right"></div>
+    <div class="leaf-decoration bottom-left"></div>
+    <div class="leaf-decoration bottom-right"></div>
+
+    <div class="auth-container">
+      <!-- App Branding -->
+      <div class="auth-header">
+        <div class="auth-logo-badge">
+          <span>Aa</span>
+        </div>
+        <h1 class="auth-title">Word Search<br><span class="highlight">Explorer</span></h1>
+        <p class="auth-subtitle">Sign in to sync your stars, coins, and levels</p>
+      </div>
+
+      <!-- Auth Card -->
+      <div class="auth-card">
+        <!-- Auth Tabs -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login" type="button">Log In</button>
+          <button class="auth-tab" id="tab-signup" type="button">Sign Up</button>
+        </div>
+
+        <!-- Error/Alert Banner -->
+        <div class="auth-alert" id="auth-alert" style="display: none;"></div>
+
+        <!-- Auth Form -->
+        <form id="auth-form">
+          <!-- Sign Up Only: Avatar Selector -->
+          <div class="auth-field" id="field-avatar" style="display: none;">
+            <label class="auth-label">Choose Avatar</label>
+            <div class="avatar-picker-row" id="auth-avatar-picker">
+              <button type="button" class="avatar-pill selected" data-avatar="🦊">🦊</button>
+              <button type="button" class="avatar-pill" data-avatar="🦁">🦁</button>
+              <button type="button" class="avatar-pill" data-avatar="🦉">🦉</button>
+              <button type="button" class="avatar-pill" data-avatar="🐯">🐯</button>
+              <button type="button" class="avatar-pill" data-avatar="🐼">🐼</button>
+              <button type="button" class="avatar-pill" data-avatar="👑">👑</button>
+              <button type="button" class="avatar-pill" data-avatar="🚀">🚀</button>
+              <button type="button" class="avatar-pill" data-avatar="💎">💎</button>
+            </div>
+          </div>
+
+          <!-- Sign Up Only: Username -->
+          <div class="auth-field" id="field-username" style="display: none;">
+            <label class="auth-label" for="auth-input-username">Username</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon">👤</span>
+              <input type="text" id="auth-input-username" class="auth-input" placeholder="Choose a username" autocomplete="username">
+            </div>
+          </div>
+
+          <!-- Login: Username or Email -->
+          <div class="auth-field" id="field-identifier">
+            <label class="auth-label" for="auth-input-identifier">Username or Email</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon">📧</span>
+              <input type="text" id="auth-input-identifier" class="auth-input" placeholder="Enter username or email" autocomplete="username email">
+            </div>
+          </div>
+
+          <!-- Sign Up Only: Email -->
+          <div class="auth-field" id="field-email" style="display: none;">
+            <label class="auth-label" for="auth-input-email">Email Address</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon">✉️</span>
+              <input type="email" id="auth-input-email" class="auth-input" placeholder="player@example.com" autocomplete="email">
+            </div>
+          </div>
+
+          <!-- Password Field -->
+          <div class="auth-field" id="field-password">
+            <label class="auth-label" for="auth-input-password">Password</label>
+            <div class="auth-input-wrap">
+              <span class="auth-input-icon">🔒</span>
+              <input type="password" id="auth-input-password" class="auth-input" placeholder="Enter password (min 6 chars)" autocomplete="current-password">
+              <button type="button" class="auth-toggle-pwd" id="btn-toggle-pwd" title="Toggle password visibility">👁️</button>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn-auth-submit" id="btn-auth-submit">
+            <span id="auth-submit-text">Log In</span>
+          </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="auth-divider">
+          <span>OR</span>
+        </div>
+
+        <!-- Google Sign-In Button -->
+        <button type="button" class="btn-google-signin" id="btn-google-signin">
+          <div class="google-icon-box">G</div>
+          <span>Continue with Google (Gmail)</span>
+        </button>
+      </div>
+
+      <!-- Guest Play Button -->
+      <div class="auth-footer">
+        <button type="button" class="btn-guest-play" id="btn-guest-play">
+          Skip for now · Play as Guest →
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ════════════════════════════════════════════════════════
        SCREEN 1: MODE SELECTION
@@ -37,11 +154,16 @@
     <div class="mode-header">
       <div class="mode-top-bar">
         <button class="settings-btn" id="btn-settings" aria-label="Settings">⚙️</button>
+        <button class="leaderboard-btn" id="btn-leaderboard" title="Star Leaderboard" aria-label="Leaderboard">🏆</button>
         <div class="header-actions">
+          <button class="user-pill-btn" id="btn-user-profile" aria-label="User Profile">
+            <span class="user-avatar" id="header-user-avatar">👤</span>
+            <span class="user-name" id="header-user-name">Login</span>
+          </button>
           <button class="theme-toggle-btn" id="btn-theme-mode" aria-label="Toggle Theme">☀️</button>
           <div class="coin-display">
             <span class="coin-icon">🪙</span>
-            <span class="coin-count">120</span>
+            <span class="coin-count">0</span>
             <span class="coin-add" id="btn-add-coins-mode" title="Get More Coins">+</span>
           </div>
         </div>
@@ -52,6 +174,16 @@
 
     <!-- Mode Cards -->
     <div class="mode-cards">
+
+      <!-- Duo Mode -->
+      <div class="mode-card master" data-mode="master" id="mode-master">
+        <div class="mode-icon-circle">👑</div>
+        <div class="mode-info">
+          <div class="mode-name">Duo 🔥</div>
+          <div class="mode-desc">Find Meaning of Hindi Words</div>
+        </div>
+        <span class="mode-arrow">›</span>
+      </div>
 
       <!-- English Mode -->
       <div class="mode-card english" data-mode="english" id="mode-english">
@@ -73,16 +205,6 @@
         <span class="mode-arrow">›</span>
       </div>
 
-      <!-- Master Mode -->
-      <div class="mode-card master" data-mode="master" id="mode-master">
-        <div class="mode-icon-circle">👑</div>
-        <div class="mode-info">
-          <div class="mode-name">Master 🔥</div>
-          <div class="mode-desc">Find Meaning of Hindi Words</div>
-        </div>
-        <span class="mode-arrow">›</span>
-      </div>
-
       <!-- Settings -->
       <div class="settings-card" id="btn-settings-card" onclick="App.showScreen('settings-screen'); App.renderSettings();">
         <div class="mode-icon-circle">⚙️</div>
@@ -98,6 +220,44 @@
 
 
   <!-- ════════════════════════════════════════════════════════
+       SCREEN 1.5: STAR LEADERBOARD
+       ════════════════════════════════════════════════════════ -->
+  <div id="leaderboard-screen" class="screen leaderboard-screen">
+    <!-- Nature leaf decorations -->
+    <div class="leaf-decoration top-left"></div>
+    <div class="leaf-decoration top-right"></div>
+
+    <div class="screen-header">
+      <button class="back-btn" data-target="mode-selection" aria-label="Back">←</button>
+      <div style="text-align: center;">
+        <span class="title" style="font-weight: 800; font-size: 18px;">Star Leaderboard 🏆</span>
+        <div style="font-size: 11px; color: var(--text-muted);">Compete for the top spot with stars</div>
+      </div>
+      <button class="settings-btn" id="btn-refresh-leaderboard" title="Refresh" aria-label="Refresh">🔄</button>
+    </div>
+
+    <!-- Podium Container (Top 3) -->
+    <div class="podium-card" id="podium-container">
+      <!-- Populated dynamically: 2nd place, 1st place, 3rd place -->
+    </div>
+
+    <!-- Section Title -->
+    <div class="leaderboard-section-title">
+    </div>
+
+    <!-- Remaining list of ranks 4+ -->
+    <div class="leaderboard-list" id="leaderboard-list">
+      <!-- Populated dynamically -->
+    </div>
+
+    <!-- Sticky Bottom Player Standing Bar -->
+    <div class="leaderboard-player-bar" id="leaderboard-player-bar">
+      <!-- Populated dynamically -->
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════
        SCREEN 2: LEVEL SELECTION
        ════════════════════════════════════════════════════════ -->
   <div id="level-selection" class="screen">
@@ -105,12 +265,12 @@
     <!-- Header -->
     <div class="screen-header">
       <button class="back-btn" data-target="mode-selection" aria-label="Back">←</button>
-      <span class="title" id="level-mode-title">Master Levels</span>
+      <span class="title" id="level-mode-title">Duo Levels</span>
       <div class="header-actions">
         <button class="theme-toggle-btn" id="btn-theme-level" aria-label="Toggle Theme">☀️</button>
         <div class="coin-display">
           <span class="coin-icon">🪙</span>
-          <span class="coin-count">120</span>
+          <span class="coin-count">0</span>
           <span class="coin-add" id="btn-add-coins-level" title="Get More Coins">+</span>
         </div>
       </div>
@@ -132,12 +292,12 @@
     <!-- Header -->
     <div class="screen-header">
       <button class="back-btn" data-target="level-selection" aria-label="Back">←</button>
-      <span class="title" id="game-mode-title">Master - Level 1 👑</span>
+      <span class="title" id="game-mode-title">Duo - Level 1 👑</span>
       <div class="header-actions">
         <button class="theme-toggle-btn" id="btn-theme-game" aria-label="Toggle Theme">☀️</button>
         <div class="coin-display">
           <span class="coin-icon">🪙</span>
-          <span class="coin-count">120</span>
+          <span class="coin-count">0</span>
           <span class="coin-add" id="btn-add-coins-game" title="Get More Coins">+</span>
         </div>
       </div>
@@ -256,7 +416,7 @@
           <span class="setting-icon">ℹ️</span>
           <div>
             <div class="setting-name">About</div>
-            <div class="setting-desc">Word Search Explorer v1.0</div>
+            <div class="setting-desc">Shabdkhoj: Word Search Puzzle v1.0</div>
           </div>
         </div>
       </div>
@@ -379,7 +539,119 @@
 </div>
 
 
+<!-- Google Sign-In Username Prompt Modal -->
+<div class="modal-overlay" id="google-auth-modal">
+  <div class="app-modal-card">
+    <div class="modal-icon-badge" style="background: #ffffff; color: #4285F4; font-weight: 900; font-size: 24px;">G</div>
+    <h2 class="modal-title">Sign in with Google</h2>
+    <p class="modal-subtitle">Enter your Gmail and choose your player username</p>
+
+    <div class="auth-field" style="margin-top: 14px; text-align: left;">
+      <label class="auth-label" for="google-input-email">Gmail Address</label>
+      <div class="auth-input-wrap">
+        <span class="auth-input-icon">✉️</span>
+        <input type="email" id="google-input-email" class="auth-input" placeholder="player@gmail.com">
+      </div>
+    </div>
+
+    <div class="auth-field" style="margin-top: 12px; text-align: left;">
+      <label class="auth-label" for="google-input-username">Player Username</label>
+      <div class="auth-input-wrap">
+        <span class="auth-input-icon">👤</span>
+        <input type="text" id="google-input-username" class="auth-input" placeholder="e.g. WordMaster">
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="btn-watch-ad" id="btn-confirm-google-login" style="background: #4285F4;">
+        Sign In with Google
+      </button>
+      <button class="btn-modal-cancel" id="btn-cancel-google-modal">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- User Profile / Account Details Modal -->
+<div class="modal-overlay" id="user-profile-modal">
+  <div class="app-modal-card">
+    <div class="modal-icon-badge" id="profile-modal-avatar">👤</div>
+    <h2 class="modal-title" id="profile-modal-username">Player</h2>
+    <p class="modal-subtitle" id="profile-modal-email">player@example.com</p>
+
+    <div class="modal-info-box" style="text-align: left;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <span style="color: var(--text-muted); font-size: 13px;">Login Provider:</span>
+        <strong id="profile-modal-provider" style="font-size: 13px;">Password</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--text-muted); font-size: 13px;">Synced Coins:</span>
+        <strong id="profile-modal-coins" style="font-size: 13px; color: var(--accent-yellow);">0 🪙</strong>
+      </div>
+    </div>
+
+    <!-- Predefined Avatar Selector in Profile -->
+    <div style="margin-top: 14px; text-align: left;">
+      <label class="auth-label" style="margin-bottom: 6px;">Choose Your Avatar</label>
+      <div class="avatar-picker-row" id="profile-avatar-picker">
+        <button type="button" class="avatar-pill" data-avatar="🦊">🦊</button>
+        <button type="button" class="avatar-pill" data-avatar="🦁">🦁</button>
+        <button type="button" class="avatar-pill" data-avatar="🦉">🦉</button>
+        <button type="button" class="avatar-pill" data-avatar="🐯">🐯</button>
+        <button type="button" class="avatar-pill" data-avatar="🐼">🐼</button>
+        <button type="button" class="avatar-pill" data-avatar="👑">👑</button>
+        <button type="button" class="avatar-pill" data-avatar="🚀">🚀</button>
+        <button type="button" class="avatar-pill" data-avatar="💎">💎</button>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="btn-modal-cancel" id="btn-logout-profile" style="background: rgba(231, 76, 60, 0.2); color: #e74c3c; border-color: rgba(231, 76, 60, 0.4);">
+        🚪 Log Out / Switch Account
+      </button>
+      <button class="btn-modal-cancel" id="btn-close-profile-modal">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Welcome Bonus Modal (200 Coins for First-Time Sign In) -->
+<div class="modal-overlay" id="welcome-bonus-overlay">
+  <div class="app-modal-card welcome-bonus-card">
+    <button class="welcome-modal-close" id="btn-close-welcome-bonus" aria-label="Close" type="button">✕</button>
+    <div class="welcome-sparkle-halo"></div>
+    <div class="welcome-coin-badge">
+      <span class="welcome-coin-icon">🪙</span>
+      <span class="welcome-coin-burst">✨</span>
+    </div>
+    <h2 class="modal-title welcome-bonus-title">🎉 Welcome Bonus!</h2>
+    <p class="modal-subtitle welcome-bonus-subtitle">
+      Welcome to <strong>Word Explorer</strong>, <span id="welcome-bonus-username">Explorer</span>!
+    </p>
+
+    <div class="welcome-bonus-amount-box">
+      <span class="welcome-bonus-plus">+</span>
+      <span class="welcome-bonus-number" id="welcome-bonus-amount">200</span>
+      <span class="welcome-bonus-label">COINS</span>
+    </div>
+
+    <p class="welcome-bonus-desc">
+      Here is your 200 Coins Welcome Gift to unlock hints, discover secret words, and conquer the leaderboard!
+    </p>
+
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button class="btn-claim-bonus" id="btn-claim-welcome-bonus">
+        <span>🎁</span> Claim 200 Coins
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Scripts (order matters: dependencies first) -->
+<script src="js/firebase-config.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/words.js"></script>
 <script src="js/grid-generator.js"></script>

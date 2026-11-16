@@ -9,6 +9,13 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    # Reference-only backup of the AdMob implementation. It imports
+    # google_mobile_ads, which is intentionally disabled for this ad-free
+    # release, so it must not be analyzed or compiled.
+    - lib/services/ad_service_admob_backup.dart
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

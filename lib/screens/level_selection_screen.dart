@@ -3,7 +3,7 @@ import '../data/word_repository.dart';
 import '../models/game_models.dart';
 import '../services/database_service.dart';
 import '../theme/app_theme.dart';
-import '../widgets/banner_ad_widget.dart';
+import '../widgets/nature_leaf_background.dart';
 import 'game_screen.dart';
 
 class LevelSelectionScreen extends StatefulWidget {
@@ -21,15 +21,23 @@ class LevelSelectionScreen extends StatefulWidget {
 }
 
 class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
-  int _coins = 120;
+  int _coins = 0;
 
   @override
   void initState() {
     super.initState();
+    DatabaseService.dataRevision.addListener(_loadState);
     _loadState();
   }
 
+  @override
+  void dispose() {
+    DatabaseService.dataRevision.removeListener(_loadState);
+    super.dispose();
+  }
+
   void _loadState() {
+    if (!mounted) return;
     setState(() {
       _coins = DatabaseService.instance.getCoins();
     });
@@ -39,108 +47,91 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
     final textColor = AppTheme.getText(context);
-    final mutedColor = AppTheme.getMuted(context);
-    final cardColor = AppTheme.getCard(context);
-    final borderColor = AppTheme.getBorder(context);
+    final cardColor = isDark ? const Color(0xFF132244) : Colors.white;
+    final borderColor = isDark ? Colors.white.withAlpha(22) : Colors.black.withAlpha(15);
 
     return Scaffold(
-      bottomNavigationBar: const BannerAdWidget(),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark
-                ? const [
-                    AppTheme.bgDark,
-                    AppTheme.bgMedium,
-                    AppTheme.bgSurface,
-                  ]
-                : const [
-                    Color(0xFFF8FAFC),
-                    Color(0xFFF1F5F9),
-                    Color(0xFFE2E8F0),
-                  ],
-          ),
-        ),
+      body: NatureLeafBackground(
         child: SafeArea(
           child: Column(
             children: [
-              // Header
+              // Top Header Bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          IconButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            icon: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: cardColor,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: borderColor),
+                    // Back & Title
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: () => Navigator.of(context).pop(),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: cardColor,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: borderColor),
+                            ),
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: textColor,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.modeTitle,
+                              style: TextStyle(
+                                fontFamily: 'Poppins',
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: textColor,
                               ),
-                              child: Icon(Icons.arrow_back_ios_new_rounded, color: textColor, size: 18),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    widget.modeTitle,
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  'Select Level',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: mutedColor,
-                                  ),
-                                ),
-                              ],
+                            Text(
+                              'Select Level',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.getMuted(context),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ],
                     ),
+
+                    // Coins Display Pill
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppTheme.gold.withAlpha(80)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(isDark ? 60 : 15),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
+                        border: Border.all(color: AppTheme.gold.withAlpha(90)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.monetization_on, color: AppTheme.gold, size: 20),
+                          const Icon(
+                            Icons.monetization_on_rounded,
+                            color: AppTheme.gold,
+                            size: 16,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             '$_coins',
                             style: TextStyle(
+                              fontFamily: 'Poppins',
                               color: textColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
                             ),
                           ),
                         ],
@@ -150,20 +141,20 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
 
-              // 30 Levels Grid (4 columns)
+              // 30 Levels Grid (4 columns matching Web version)
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
                   child: GridView.builder(
                     physics: const BouncingScrollPhysics(),
                     itemCount: WordRepository.totalLevels,
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 4,
-                      crossAxisSpacing: 14,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.85,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 14,
+                      childAspectRatio: 0.9,
                     ),
                     itemBuilder: (context, index) {
                       final level = index + 1;
@@ -194,15 +185,17 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
     final bool isCompleted = progress?.completed == true;
     final int stars = progress?.stars ?? 0;
     final isDark = AppTheme.isDark(context);
-    final cardColor = AppTheme.getCard(context);
-    final cardLightColor = AppTheme.getCardLight(context);
+    final cardColor = isDark ? const Color(0xFF132244) : Colors.white;
     final textColor = AppTheme.getText(context);
-    final borderColor = AppTheme.getBorder(context);
+    final borderColor = isDark ? Colors.white.withAlpha(22) : Colors.black.withAlpha(15);
+
+    // Identify if this is the active current level
+    final isCurrent = isUnlocked && !isCompleted && (level == 1 || DatabaseService.instance.getProgress(widget.mode, level - 1)?.completed == true);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         onTap: isUnlocked
             ? () async {
                 await Navigator.of(context).push(
@@ -216,8 +209,6 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                 _loadState();
               }
             : () {
-                final cardColor = AppTheme.getCard(context);
-                final textColor = AppTheme.getText(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     backgroundColor: cardColor,
@@ -225,6 +216,8 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
                       'Complete Level ${level - 1} to unlock Level $level!',
                       style: TextStyle(color: textColor),
                     ),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     duration: const Duration(seconds: 2),
                   ),
                 );
@@ -232,67 +225,75 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
         child: Container(
           decoration: BoxDecoration(
             color: isUnlocked
-                ? (isCompleted ? cardLightColor : cardColor)
-                : (isDark ? AppTheme.bgDark.withAlpha(120) : Colors.black.withAlpha(12)),
-            borderRadius: BorderRadius.circular(20),
+                ? (isCurrent
+                    ? AppTheme.emerald.withAlpha(isDark ? 30 : 20)
+                    : (isCompleted ? AppTheme.blue.withAlpha(isDark ? 25 : 15) : cardColor))
+                : (isDark ? Colors.white.withAlpha(6) : Colors.black.withAlpha(8)),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: isUnlocked
-                  ? (isCompleted ? AppTheme.emerald.withAlpha(120) : borderColor)
-                  : (isDark ? Colors.white.withAlpha(10) : Colors.black.withAlpha(10)),
-              width: isCompleted ? 1.5 : 1,
+              color: isCurrent
+                  ? AppTheme.emerald
+                  : (isCompleted ? AppTheme.blue.withAlpha(140) : borderColor),
+              width: isCurrent ? 2 : (isCompleted ? 1.5 : 1),
             ),
-            boxShadow: isUnlocked
+            boxShadow: isCurrent
                 ? [
                     BoxShadow(
-                      color: isCompleted
-                          ? AppTheme.emerald.withAlpha(40)
-                          : Colors.black.withAlpha(isDark ? 40 : 15),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                      color: AppTheme.emerald.withAlpha(isDark ? 90 : 50),
+                      blurRadius: 14,
+                      offset: const Offset(0, 3),
                     ),
                   ]
-                : null,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(6),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (!isUnlocked)
-                    Icon(
-                      Icons.lock_rounded,
-                      color: isDark ? Colors.white30 : Colors.black26,
-                      size: 26,
-                    )
-                  else ...[
-                    Text(
-                      '$level',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: isCompleted ? AppTheme.emerald : textColor,
-                      ),
+                : [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(isDark ? 40 : 10),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(3, (i) {
-                        final earned = i < stars;
-                        return Icon(
-                          Icons.star_rounded,
-                          size: 14,
+                  ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (!isUnlocked)
+                Icon(
+                  Icons.lock_rounded,
+                  color: isDark ? Colors.white30 : Colors.black26,
+                  size: 22,
+                )
+              else ...[
+                Text(
+                  '$level',
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: isCurrent
+                        ? AppTheme.emerald
+                        : (isCompleted ? const Color(0xFF60A5FA) : textColor),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(3, (i) {
+                    final earned = i < stars;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 1),
+                      child: Text(
+                        '★',
+                        style: TextStyle(
+                          fontSize: 11,
                           color: earned
                               ? AppTheme.gold
                               : (isDark ? Colors.white.withAlpha(30) : Colors.black.withAlpha(25)),
-                        );
-                      }),
-                    ),
-                  ],
-                ],
-              ),
-            ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ],
           ),
         ),
       ),

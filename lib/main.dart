@@ -1,26 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/splash_screen.dart';
 import 'services/ad_service.dart';
+import 'services/auth_service.dart';
 import 'services/database_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load .env configuration with safe fallback
+  // Catch any unhandled Flutter framework errors
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint('[FlutterError] ${details.exception}');
+  };
+
   try {
-    await dotenv.load(fileName: ".env");
-  } catch (e) {
-    debugPrint('[Env] Notice: .env file not found or failed to load: $e. Using default test ad IDs.');
+    // Initialize local mobile database (SharedPreferences)
+    await DatabaseService.instance.init();
+    // Initialize Firebase Authentication (falls back to offline mode on failure)
+    await AuthService.instance.initializeFirebase();
+    // Initialize authentication session
+    await AuthService.instance.init();
+  } catch (e, stack) {
+    debugPrint('[main] DatabaseService / AuthService init error: $e\n$stack');
   }
 
-  // Initialize local mobile database (SharedPreferences)
-  await DatabaseService.instance.init();
-
-  // Initialize Google Mobile Ads SDK (reads IDs from .env or defaults to test IDs)
-  await AdService.instance.initialize();
+  try {
+    // Initialize AdService (ad-free mode for this release)
+    await AdService.instance.initialize();
+  } catch (e, stack) {
+    debugPrint('[main] AdService init error: $e\n$stack');
+  }
 
   runApp(const WordSearchExplorerApp());
 }
@@ -45,7 +56,7 @@ class WordSearchExplorerApp extends StatelessWidget {
 
         return MaterialApp(
           navigatorKey: AdService.navigatorKey,
-          title: 'Word Search Explorer',
+          title: 'Shabdkhoj: Word Search Puzzle',
           debugShowCheckedModeBanner: false,
           themeMode: themeMode,
           theme: AppTheme.lightThemeData,

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import 'login_screen.dart';
 import 'mode_selection_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -54,11 +56,14 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigateToHome() {
     Future.delayed(const Duration(milliseconds: 200), () {
       if (!mounted) return;
+      final targetScreen = AuthService.instance.isLoggedIn
+          ? const ModeSelectionScreen()
+          : const LoginScreen();
+
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const ModeSelectionScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) => targetScreen,
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -204,7 +209,7 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                             const SizedBox(height: 4),
                             const Text(
-                              'EXPLORER',
+                              'SHABDKHOJ',
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.w900,

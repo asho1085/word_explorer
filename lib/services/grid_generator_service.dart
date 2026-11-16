@@ -33,6 +33,31 @@ class GridGeneratorService {
     required int cols,
     required bool isHindi,
   }) {
+    final uniqueWords = words.toSet().toList();
+    Map<String, dynamic>? best;
+    var bestPlacedCount = -1;
+
+    // Random placement can occasionally fail for a crowded grid. Retry a few
+    // times so every level is guaranteed to contain all of its words.
+    for (var attempt = 0; attempt < 40; attempt++) {
+      final result = _generateAttempt(uniqueWords, rows, cols, isHindi);
+      final placedCount = (result['placements'] as Map).length;
+      if (placedCount > bestPlacedCount) {
+        best = result;
+        bestPlacedCount = placedCount;
+      }
+      if (placedCount == uniqueWords.length) break;
+    }
+
+    return best!;
+  }
+
+  Map<String, dynamic> _generateAttempt(
+    List<String> words,
+    int rows,
+    int cols,
+    bool isHindi,
+  ) {
     // Initialize empty grid with empty strings
     List<List<String?>> grid = List.generate(
       rows,

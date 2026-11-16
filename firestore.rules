@@ -1,0 +1,303 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: users
+// Document ID: {userId} (Must match request.auth.uid)
+// Fields:
+//   - uid: string (required, immutable) - Firebase Auth UID matching the document ID
+//   - username: string (required, 3-30 chars, alphanumeric + space/underscore/hash/hyphen, no URLs) - Player's unique display name
+//   - email: string (required, max 100 chars) - Player's email address (or empty string for guest accounts)
+//   - avatar: string (required, 1-50 chars) - Avatar emoji or preset asset identifier
+//   - stars: number (required, non-negative, 0-450) - Total stars collected across game modes (max 3 per completed level)
+//   - levelsCompleted: number (required, non-negative, 0-150) - Total game levels cleared (50 levels x 3 modes)
+//   - coins: number (required, non-negative, 0-100,000,000) - Virtual currency balance
+//   - updatedAt: timestamp (required) - Timestamp of last progress/profile update
+//   - progress: map (optional, max 200 entries) - Per-level results keyed by
+//       "<mode>_<level>", e.g. "english_1": { stars: 0-3, bestTime: seconds }
+//       Only the document owner can read or write it.
+//   - welcomeBonusClaimed: bool (optional) - Starter bonus already granted
+//   - lastDailyBonusDate: string (optional, max 10 chars) - "YYYY-MM-DD"
+//       Informational only; eligibility is enforced by dailyClaims below.
+//
+// Collection: dailyClaims
+// Document ID: {userId} (Must match request.auth.uid)
+// Fields:
+//   - uid: string (required, immutable) - Firebase Auth UID matching the document ID
+//   - lastClaimAt: timestamp (required, server-only) - Server time of the last
+//       daily bonus claim. Clients must send FieldValue.serverTimestamp().
+//   One document per account. A new claim is only accepted on a later
+//   server-side calendar day (00:00 IST), so changing the phone clock or date
+//   cannot unlock extra daily bonuses.
+//
+// Collection: leaderboard
+// Document ID: {userId} (Must match request.auth.uid)
+// Fields:
+//   - username: string (required, 3-30 chars, alphanumeric + space/underscore/hash/hyphen, no URLs) - Player's public display name
+//   - avatar: string (required, 1-50 chars) - Avatar emoji or icon
+//   - stars: number (required, non-negative, 0-450) - Total stars for ranking (max 3 per completed level)
+//   - levelsCompleted: number (required, non-negative, 0-150) - Completed levels for tie-breaking
+//   - updatedAt: timestamp (required) - Timestamp of score submission
+//
+// Collection: playActivity
+// Document ID: {userId} (Must match request.auth.uid)
+// Fields:
+//   - uid: string (required) - Firebase Auth UID matching the document ID
+//   - completedAt: timestamp (required, server-only) - Latest level completion
+//
+// Collection: streaks
+// Document ID: {userId} (Must match request.auth.uid)
+// Fields:
+//   - uid: string (required) - Firebase Auth UID matching the document ID
+//   - current: number (required, 1-100,000) - Consecutive IST play days
+//   - best: number (required, >= current) - Longest streak
+//   - lastPlayedAt: timestamp (required) - Must equal playActivity.completedAt
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Check if the request is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user is the document owner
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Verify all required fields exist in incoming data
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // Verify incoming data contains ONLY allowed fields (strictly enforces schema)
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Verify string field type and enforce length constraints
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    // Validate username format: 3-30 chars, alphanumeric + space/underscore/hash/hyphen, no URLs/links
+    function isValidUsername(username) {
+      return username is string &&
+        username.size() >= 3 &&
+        username.size() <= 30 &&
+        username.matches('^[a-zA-Z0-9 _#-]{3,30}$') &&
+        !username.matches('(?i).*(http|www|\\.com|\\.net|\\.org|\\.io|\\.xyz).*');
+    }
+
+    // Validate email format and bounded length (permits empty string for guest users)
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() <= 100 &&
+        (email.size() == 0 || email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"));
+    }
+
+    // Verify non-negative numeric field within realistic bounds
+    function isNonNegativeNumber(field, maxVal) {
+      return request.resource.data[field] is number &&
+        request.resource.data[field] >= 0 &&
+        request.resource.data[field] <= maxVal;
+    }
+
+    // Ensure uid field cannot be modified during updates
+    function uidNotModified() {
+      return !('uid' in request.resource.data) ||
+        request.resource.data.uid == resource.data.uid;
+    }
+
+    // Verify immutable fields have not been changed
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // Calendar-day index of the daily reset (00:00 IST / UTC+05:30).
+    // Must match DatabaseService._bonusDayKey in the app.
+    function bonusDay(t) {
+      return (t + duration.value(330, 'm')).year() * 10000 +
+        (t + duration.value(330, 'm')).month() * 100 +
+        (t + duration.value(330, 'm')).day();
+    }
+
+    function playDay(t) {
+      return math.floor((t.toMillis() + 19800000) / 86400000);
+    }
+
+    // ===============================================================
+    // Domain Validators (Validator Function Pattern)
+    // ===============================================================
+
+    // Domain validator for /users/{userId} (called on both create and update)
+    function isValidUserData(data, userId) {
+      return hasOnlyAllowedFields(['uid', 'username', 'email', 'avatar', 'stars', 'levelsCompleted', 'coins', 'updatedAt', 'progress', 'welcomeBonusClaimed', 'lastDailyBonusDate']) &&
+        hasRequiredFields(['uid', 'username', 'email', 'avatar', 'stars', 'levelsCompleted', 'coins', 'updatedAt']) &&
+        data.uid is string &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.uid.size() > 0 &&
+        data.uid.size() <= 128 &&
+        validStringLength('username', 3, 30) &&
+        isValidUsername(data.username) &&
+        isValidEmail(data.email) &&
+        validStringLength('avatar', 1, 50) &&
+        isNonNegativeNumber('stars', 450) &&
+        isNonNegativeNumber('levelsCompleted', 150) &&
+        data.stars is int &&
+        data.levelsCompleted is int &&
+        data.stars <= data.levelsCompleted * 3 &&
+        isNonNegativeNumber('coins', 100000000) &&
+        data.updatedAt is timestamp &&
+        (!('progress' in data) || (data.progress is map && data.progress.size() <= 200)) &&
+        (!('welcomeBonusClaimed' in data) || data.welcomeBonusClaimed is bool) &&
+        (!('lastDailyBonusDate' in data) ||
+          (data.lastDailyBonusDate is string && data.lastDailyBonusDate.size() <= 10));
+    }
+
+    // Domain validator for /dailyClaims/{userId} (called on both create and update)
+    function isValidDailyClaimData(data, userId) {
+      return hasOnlyAllowedFields(['uid', 'lastClaimAt']) &&
+        hasRequiredFields(['uid', 'lastClaimAt']) &&
+        data.uid is string &&
+        data.uid == userId &&
+        data.uid == request.auth.uid &&
+        data.lastClaimAt is timestamp;
+    }
+
+    // Domain validator for /leaderboard/{userId} (called on both create and update)
+    function isValidLeaderboardData(data) {
+      return hasOnlyAllowedFields(['username', 'avatar', 'stars', 'levelsCompleted', 'updatedAt']) &&
+        hasRequiredFields(['username', 'avatar', 'stars', 'levelsCompleted', 'updatedAt']) &&
+        validStringLength('username', 3, 30) &&
+        isValidUsername(data.username) &&
+        validStringLength('avatar', 1, 50) &&
+        isNonNegativeNumber('stars', 450) &&
+        isNonNegativeNumber('levelsCompleted', 150) &&
+        data.stars is int &&
+        data.levelsCompleted is int &&
+        data.stars <= data.levelsCompleted * 3 &&
+        data.updatedAt == request.time;
+    }
+
+    function isValidPlayActivity(data, userId) {
+      return hasOnlyAllowedFields(['uid', 'completedAt']) &&
+        hasRequiredFields(['uid', 'completedAt']) &&
+        data.uid == userId &&
+        data.completedAt == request.time;
+    }
+
+    function isValidStreakShape(data, userId) {
+      return hasOnlyAllowedFields(['uid', 'current', 'best', 'lastPlayedAt']) &&
+        hasRequiredFields(['uid', 'current', 'best', 'lastPlayedAt']) &&
+        data.uid == userId &&
+        data.current is int &&
+        data.best is int &&
+        data.current >= 1 &&
+        data.current <= 100000 &&
+        data.best >= data.current &&
+        data.best <= 100000 &&
+        data.lastPlayedAt is timestamp &&
+        exists(/databases/$(database)/documents/playActivity/$(userId)) &&
+        data.lastPlayedAt ==
+          get(/databases/$(database)/documents/playActivity/$(userId)).data.completedAt;
+    }
+
+    function isValidStreakAdvance(next, previous) {
+      return playDay(next.lastPlayedAt) > playDay(previous.lastPlayedAt) &&
+        ((playDay(next.lastPlayedAt) == playDay(previous.lastPlayedAt) + 1 &&
+            next.current == previous.current + 1) ||
+          (playDay(next.lastPlayedAt) > playDay(previous.lastPlayedAt) + 1 &&
+            next.current == 1)) &&
+        ((next.current > previous.best && next.best == next.current) ||
+          (next.current <= previous.best && next.best == previous.best));
+    }
+
+    // ===============================================================
+    // Security Rules
+    // ===============================================================
+
+    // 1. Private User Profiles: /users/{userId}
+    // Strict PII protection: only the authenticated user matching userId can read or write.
+    // Enforces rate-limiting cooldown of at least 1 second between updates.
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidUserData(request.resource.data, userId);
+      allow update: if isOwner(userId) &&
+                       uidNotModified() &&
+                       areImmutableFieldsUnchanged(['uid']) &&
+                       request.time >= resource.data.updatedAt + duration.value(1, 's') &&
+                       isValidUserData(request.resource.data, userId);
+      allow delete: if isOwner(userId);
+    }
+
+    // 2. Daily bonus claim record: /dailyClaims/{userId}
+    // lastClaimAt must equal the server request time, and updates are only
+    // accepted on a later server-side calendar day (IST). The device clock is
+    // never consulted. Deletes are denied so a claim record cannot be reset.
+    match /dailyClaims/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidDailyClaimData(request.resource.data, userId) &&
+                       request.resource.data.lastClaimAt == request.time;
+      allow update: if isOwner(userId) &&
+                       isValidDailyClaimData(request.resource.data, userId) &&
+                       request.resource.data.lastClaimAt == request.time &&
+                       bonusDay(request.time) > bonusDay(resource.data.lastClaimAt);
+      allow delete: if false;
+    }
+
+    // 3. Public Leaderboard: /leaderboard/{userId}
+    // Lightweight document with zero PII; public read allowed for global player rankings.
+    // Writes restricted exclusively to the authenticated owner.
+    // Enforces rate-limiting cooldown of at least 1 second between updates.
+    match /leaderboard/{userId} {
+      allow read: if true;
+      allow create: if isOwner(userId) &&
+                       isValidLeaderboardData(request.resource.data);
+      allow update: if isOwner(userId) &&
+                       request.time >= resource.data.updatedAt + duration.value(1, 's') &&
+                       isValidLeaderboardData(request.resource.data);
+      allow delete: if isOwner(userId);
+    }
+
+    match /playActivity/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId) &&
+                               isValidPlayActivity(request.resource.data, userId);
+      allow delete: if false;
+    }
+
+    match /streaks/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) &&
+                       isValidStreakShape(request.resource.data, userId) &&
+                       request.resource.data.current == 1 &&
+                       request.resource.data.best == 1;
+      allow update: if isOwner(userId) &&
+                       isValidStreakShape(request.resource.data, userId) &&
+                       isValidStreakAdvance(request.resource.data, resource.data);
+      allow delete: if false;
+    }
+
+    // Default deny all other paths
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

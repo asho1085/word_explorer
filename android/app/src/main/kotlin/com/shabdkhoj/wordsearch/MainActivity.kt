@@ -1,4 +1,4 @@
-package com.example.word_explorer
+package com.shabdkhoj.wordsearch
 
 import io.flutter.embedding.android.FlutterActivity
 
